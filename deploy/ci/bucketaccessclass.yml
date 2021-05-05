@@ -1,0 +1,11 @@
+---
+kind: BucketAccessClass
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: cosi-provisioner-sample-bac
+  labels:
+    app.kubernetes.io/part-of: cosi-provisioner-sample
+    app.kubernetes.io/name: cosi-provisioner-sample
+policyActionsConfigMap:
+  name: cosi-provisioner-sample-bac
+  namespace: default

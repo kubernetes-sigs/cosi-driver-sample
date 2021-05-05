@@ -1,0 +1,8 @@
+---
+kind: BucketRequest
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: cosi-provisioner-sample-br
+spec:
+  bucketClassName: cosi-provisioner-sample
+  bucketPrefix: ci

@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cosi-provisioner-sample-bac
+  namespace: default
+  labels:
+    app.kubernetes.io/part-of: cosi-provisioner-sample
+    app.kubernetes.io/name: cosi-provisioner-sample
+data:
+  provisioner_data: ""

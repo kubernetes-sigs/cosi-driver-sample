@@ -1,0 +1,19 @@
+---
+kind: BucketClass
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: cosi-provisioner-sample
+  labels:
+    app.kubernetes.io/part-of: cosi-provisioner-sample
+    app.kubernetes.io/name: cosi-provisioner-sample
+provisioner: cosi-provisioner-sample.scality.com
+isDefaultBucketClass: true
+allowedNamespaces:
+  - default
+protocol:
+  s3:
+    bucketName: unused
+    endpoint: object-storage.local
+    region: test
+    signatureVersion: S3V4
+deletionPolicy: Delete

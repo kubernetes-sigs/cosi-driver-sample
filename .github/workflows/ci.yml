@@ -75,6 +75,8 @@ jobs:
         with:
           tags: cosi-provisioner-sample:ci
           push: false
+          outputs: |
+            type=docker,dest=cosi-provisioner-sample.tar
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache
@@ -83,3 +85,52 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: container-images
+          path: cosi-provisioner-sample.tar
+
+  e2e:
+    name: E2E
+    needs:
+      - "build"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Retrieve artifacts
+        uses: actions/download-artifact@v2.0.9
+        with:
+          name: container-images
+      - name: Start Kind cluster
+        uses: helm/kind-action@v1.1.0
+        with:
+          cluster_name: kind
+      - name: Import container images into Kind cluster
+        run: |
+          kind load image-archive cosi-provisioner-sample.tar
+      - name: Deploy COSI prerequisites
+        run: |
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-api
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-controller
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-csi-adapter
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Deploy
+        run: |
+          kubectl apply -k deploy/ci/
+          kubectl wait --for=condition=available deployment/cosi-provisioner-sample
+
+          kubectl wait --for=condition=Ready pod/object-storage-consumer
+      - name: Test
+        run: |
+          kubectl cp object-storage-consumer:/data/cosi/credentials.json credentials.json
+          kubectl cp object-storage-consumer:/data/cosi/protocolConn.json protocolConn.json
+
+          test "$(jq '.endpoint' protocolConn.json)" = '"object-storage.local"'
+          test "$(jq '.region' protocolConn.json)" = '"test"'
+          test "$(jq '.signatureVersion' protocolConn.json)" = '"S3V4"'
+
+          test "$(jq '.CredentialsFileContents' credentials.json)" = '"# Nothing to see here"'
+          test "$(jq '.CredentialsFilePath' credentials.json)" = '".aws/credentials"'
