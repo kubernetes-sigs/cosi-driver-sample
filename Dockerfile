@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1-experimental
 
-FROM --platform=${BUILDPLATFORM} docker.io/golang:1.16.3-buster AS base
+FROM --platform=${BUILDPLATFORM} docker.io/golang:1.16.4-buster AS base
 ARG BUILDPLATFORM
 WORKDIR /usr/src/cosi-provisioner-sample
 COPY go.mod go.sum ./
