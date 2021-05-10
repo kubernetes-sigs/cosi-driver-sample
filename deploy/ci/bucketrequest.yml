@@ -2,7 +2,7 @@
 kind: BucketRequest
 apiVersion: objectstorage.k8s.io/v1alpha1
 metadata:
-  name: cosi-provisioner-sample-br
+  name: cosi-driver-sample-br
 spec:
-  bucketClassName: cosi-provisioner-sample
+  bucketClassName: cosi-driver-sample
   bucketPrefix: ci

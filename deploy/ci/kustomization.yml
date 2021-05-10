@@ -13,5 +13,5 @@ resources:
   - pod.yml
 
 images:
-  - name: cosi-provisioner-sample
+  - name: cosi-driver-sample
     newTag: ci

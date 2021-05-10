@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cosiprovisioner
+package cosidriver
 
 import (
 	"errors"
@@ -22,7 +22,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/scality/cosi-provisioner-sample/pkg/identityserver"
+	"github.com/scality/cosi-driver-sample/pkg/identityserver"
 	klog "k8s.io/klog/v2"
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 )
@@ -32,8 +32,8 @@ const (
 )
 
 // Run a COSI GRPC service. This sets up signal handlers for SIGINT and SIGTERM.
-func Run(endpoint, provisionerName string, provisionerServer spec.ProvisionerServer) error {
-	server, err := RunNoSignals(endpoint, provisionerName, provisionerServer)
+func Run(endpoint, driverName string, provisionerServer spec.ProvisionerServer) error {
+	server, err := RunNoSignals(endpoint, driverName, provisionerServer)
 	if err != nil {
 		return err
 	}
@@ -62,13 +62,13 @@ func Run(endpoint, provisionerName string, provisionerServer spec.ProvisionerSer
 }
 
 // Run a COSI GRPC service, without setting up any signal handlers.
-func RunNoSignals(endpoint, provisionerName string, provisionerServer spec.ProvisionerServer) (*COSIGRPCServer, error) {
+func RunNoSignals(endpoint, driverName string, provisionerServer spec.ProvisionerServer) (*COSIGRPCServer, error) {
 	proto, address, err := parseEndpoint(endpoint)
 	if err != nil {
 		return nil, err
 	}
 
-	identityServer := identityserver.NewIdentityServer(provisionerName)
+	identityServer := identityserver.NewIdentityServer(driverName)
 
 	server := newCOSIGRPCServer(proto, address, identityServer, provisionerServer)
 	if err := server.start(); err != nil {

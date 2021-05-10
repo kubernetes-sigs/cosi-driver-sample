@@ -16,5 +16,5 @@ spec:
       csi:
         driver: objectstorage.k8s.io
         volumeAttributes:
-          bar-name: cosi-provisioner-sample-bar
+          bar-name: cosi-driver-sample-bar
           bar-namespace: default

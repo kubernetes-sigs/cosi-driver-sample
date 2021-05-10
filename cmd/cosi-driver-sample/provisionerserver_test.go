@@ -25,7 +25,7 @@ import (
 
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
-	main "github.com/scality/cosi-provisioner-sample/cmd/cosi-provisioner-sample"
+	main "github.com/scality/cosi-driver-sample/cmd/cosi-driver-sample"
 )
 
 var _ = Describe("ProvisionerServer", func() {

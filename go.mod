@@ -1,4 +1,4 @@
-module github.com/scality/cosi-provisioner-sample
+module github.com/scality/cosi-driver-sample
 
 go 1.15
 

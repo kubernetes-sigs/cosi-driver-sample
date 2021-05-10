@@ -35,7 +35,7 @@ jobs:
       - name: Build test container
         uses: docker/build-push-action@v2.4.0
         with:
-          tags: cosi-provisioner-sample-test:ci
+          tags: cosi-driver-sample-test:ci
           push: false
           load: true
           target: "test"
@@ -46,8 +46,8 @@ jobs:
       - name: Run tests
         run: |
           docker run \
-              -v $(pwd):/usr/src/cosi-provisioner-sample:ro \
-              cosi-provisioner-sample-test:ci
+              -v $(pwd):/usr/src/cosi-driver-sample:ro \
+              cosi-driver-sample-test:ci
       - name: Move cache
         # Temporary fix
         # See https://github.com/docker/build-push-action/blob/17822e4df435afa2aa88ec7d85b56ff55446ca36/docs/advanced/cache.md#github-cache
@@ -73,10 +73,10 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v2.4.0
         with:
-          tags: cosi-provisioner-sample:ci
+          tags: cosi-driver-sample:ci
           push: false
           outputs: |
-            type=docker,dest=cosi-provisioner-sample.tar
+            type=docker,dest=cosi-driver-sample.tar
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache
@@ -89,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v2.2.3
         with:
           name: container-images
-          path: cosi-provisioner-sample.tar
+          path: cosi-driver-sample.tar
 
   e2e:
     name: E2E
@@ -109,7 +109,7 @@ jobs:
           cluster_name: kind
       - name: Import container images into Kind cluster
         run: |
-          kind load image-archive cosi-provisioner-sample.tar
+          kind load image-archive cosi-driver-sample.tar
       - name: Deploy COSI prerequisites
         run: |
           kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-api
@@ -120,7 +120,7 @@ jobs:
       - name: Deploy
         run: |
           kubectl apply -k deploy/ci/
-          kubectl wait --for=condition=available deployment/cosi-provisioner-sample
+          kubectl wait --for=condition=available deployment/cosi-driver-sample
 
           kubectl wait --for=condition=Ready pod/object-storage-consumer
       - name: Test

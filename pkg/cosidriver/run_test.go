@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cosiprovisioner_test
+package cosidriver_test
 
 import (
 	"context"
@@ -24,25 +24,25 @@ import (
 
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
-	"github.com/scality/cosi-provisioner-sample/pkg/cosiprovisioner"
+	"github.com/scality/cosi-driver-sample/pkg/cosidriver"
 )
 
 var _ = Describe("Run", func() {
 	It("Doesn't allow invalid endpoints", func() {
-		Expect(cosiprovisioner.Run("udp://127.0.0.1:0", "", nil)).NotTo(Succeed())
-		Expect(cosiprovisioner.Run("unix://", "", nil)).NotTo(Succeed())
-		Expect(cosiprovisioner.Run("tcp://", "", nil)).NotTo(Succeed())
+		Expect(cosidriver.Run("udp://127.0.0.1:0", "", nil)).NotTo(Succeed())
+		Expect(cosidriver.Run("unix://", "", nil)).NotTo(Succeed())
+		Expect(cosidriver.Run("tcp://", "", nil)).NotTo(Succeed())
 	})
 })
 
 var _ = Describe("RunNoSignals", func() {
 	const (
-		endpoint        = "unix:///tmp/cosi.sock"
-		provisionerName = "cosi-provisioner-sample-tests"
+		endpoint   = "unix:///tmp/cosi.sock"
+		driverName = "cosi-driver-sample-tests"
 	)
 
 	It("Starts a GRPC server", func() {
-		server, err := cosiprovisioner.RunNoSignals(endpoint, provisionerName, &spec.UnimplementedProvisionerServer{})
+		server, err := cosidriver.RunNoSignals(endpoint, driverName, &spec.UnimplementedProvisionerServer{})
 		Expect(err).NotTo(HaveOccurred())
 
 		conn, err := grpc.Dial(endpoint, grpc.WithInsecure(), grpc.WithBlock())
@@ -57,7 +57,7 @@ var _ = Describe("RunNoSignals", func() {
 		resp, err := client.ProvisionerGetInfo(ctx, &spec.ProvisionerGetInfoRequest{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(resp.Name).To(Equal(provisionerName))
+		Expect(resp.Name).To(Equal(driverName))
 
 		server.GracefulStop()
 		server.Wait()

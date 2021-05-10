@@ -2,34 +2,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cosi-provisioner-sample
+  name: cosi-driver-sample
   labels:
-    app.kubernetes.io/part-of: cosi-provisioner-sample
-    app.kubernetes.io/component: provisioner
-    app.kubernetes.io/name: cosi-provisioner-sample
+    app.kubernetes.io/part-of: cosi-driver-sample
+    app.kubernetes.io/component: driver
+    app.kubernetes.io/name: cosi-driver-sample
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: cosi-provisioner-sample
-      app.kubernetes.io/component: provisioner
-      app.kubernetes.io/name: cosi-provisioner-sample
+      app.kubernetes.io/part-of: cosi-driver-sample
+      app.kubernetes.io/component: driver
+      app.kubernetes.io/name: cosi-driver-sample
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: cosi-provisioner-sample
-        app.kubernetes.io/component: provisioner
-        app.kubernetes.io/name: cosi-provisioner-sample
+        app.kubernetes.io/part-of: cosi-driver-sample
+        app.kubernetes.io/component: driver
+        app.kubernetes.io/name: cosi-driver-sample
     spec:
-      serviceAccountName: cosi-provisioner-sample
+      serviceAccountName: cosi-driver-sample
       containers:
-        - name: cosi-provisioner-sample
-          image: cosi-provisioner-sample:latest
+        - name: cosi-driver-sample
+          image: cosi-driver-sample:latest
           args: ["-v", "2"]
           volumeMounts:
             - mountPath: /var/lib/cosi
               name: socket
-        - name: objectstorage-provisioner-sidecar
+        - name: objectstorage-driver-sidecar
           image: quay.io/containerobjectstorage/objectstorage-sidecar:canary
           env:
             - name: POD_NAMESPACE

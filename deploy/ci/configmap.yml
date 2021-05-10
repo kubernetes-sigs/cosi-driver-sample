@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: cosi-provisioner-sample-bac
+  name: cosi-driver-sample-bac
   namespace: default
   labels:
-    app.kubernetes.io/part-of: cosi-provisioner-sample
-    app.kubernetes.io/name: cosi-provisioner-sample
+    app.kubernetes.io/part-of: cosi-driver-sample
+    app.kubernetes.io/name: cosi-driver-sample
 data:
   provisioner_data: ""

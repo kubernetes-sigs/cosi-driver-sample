@@ -18,25 +18,25 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/scality/cosi-provisioner-sample/pkg/cosiprovisioner"
+	"github.com/scality/cosi-driver-sample/pkg/cosidriver"
 )
 
 const (
-	provisionerName = "cosi-provisioner-sample.scality.com"
+	driverName = "cosi-driver-sample.scality.com"
 )
 
 func main() {
 	klog.InitFlags(nil)
 
-	endpoint := flag.String("endpoint", cosiprovisioner.DefaultEndpoint, "endpoint for the GRPC server")
+	endpoint := flag.String("endpoint", cosidriver.DefaultEndpoint, "endpoint for the GRPC server")
 	flag.Parse()
 
 	defer klog.Flush()
 
 	provisionerServer := NewProvisionerServer()
 
-	err := cosiprovisioner.Run(*endpoint, provisionerName, provisionerServer)
+	err := cosidriver.Run(*endpoint, driverName, provisionerServer)
 	if err != nil {
-		klog.Exitf("Error when running provisioner: %v", err)
+		klog.Exitf("Error when running driver: %v", err)
 	}
 }

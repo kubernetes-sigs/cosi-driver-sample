@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main_test
+package cosidriver_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -21,5 +21,5 @@ import (
 
 func TestMain(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "cosi-provisioner-sample")
+	RunSpecs(t, "cosidriver")
 }

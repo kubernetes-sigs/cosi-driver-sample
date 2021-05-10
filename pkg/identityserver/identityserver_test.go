@@ -21,12 +21,12 @@ import (
 
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
-	identityserver "github.com/scality/cosi-provisioner-sample/pkg/identityserver"
+	identityserver "github.com/scality/cosi-driver-sample/pkg/identityserver"
 )
 
 var _ = Describe("IdentityServer", func() {
 	const (
-		provisionerName = "cosi-provisioner-sample-test"
+		driverName = "cosi-driver-sample-test"
 	)
 
 	var (
@@ -36,13 +36,13 @@ var _ = Describe("IdentityServer", func() {
 
 	BeforeEach(func() {
 		ctx = context.TODO()
-		identityServer = identityserver.NewIdentityServer(provisionerName)
+		identityServer = identityserver.NewIdentityServer(driverName)
 	})
 
 	It("Correctly implements ProvisionerGetInfo", func() {
 		resp, err := identityServer.ProvisionerGetInfo(ctx, &spec.ProvisionerGetInfoRequest{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(resp.Name).To(Equal(provisionerName))
+		Expect(resp.Name).To(Equal(driverName))
 	})
 })

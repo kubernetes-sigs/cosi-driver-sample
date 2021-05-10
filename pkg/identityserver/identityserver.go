@@ -12,7 +12,7 @@
 // limitations under the License.
 
 // Package identityserver provides a simple implementation of an IdentityServer
-// for a given provisioner name.
+// for a given driver name.
 package identityserver
 
 import (
@@ -24,23 +24,23 @@ import (
 type identityServer struct {
 	spec.UnimplementedIdentityServer
 
-	provisionerName string
+	driverName string
 }
 
 // Type-check
 var _ spec.IdentityServer = &identityServer{}
 
-// Construct a new IdentityServer which will report the given provisioner name
+// Construct a new IdentityServer which will report the given driver name
 // when replying to a ProvisionerGetInfo RPC call.
-func NewIdentityServer(provisionerName string) spec.IdentityServer {
+func NewIdentityServer(driverName string) spec.IdentityServer {
 	return &identityServer{
-		provisionerName: provisionerName,
+		driverName: driverName,
 	}
 }
 
 // Implementation for IdentityServer.ProvisionerGetInfo.
 func (i identityServer) ProvisionerGetInfo(ctx context.Context, req *spec.ProvisionerGetInfoRequest) (*spec.ProvisionerGetInfoResponse, error) {
 	return &spec.ProvisionerGetInfoResponse{
-		Name: i.provisionerName,
+		Name: i.driverName,
 	}, nil
 }

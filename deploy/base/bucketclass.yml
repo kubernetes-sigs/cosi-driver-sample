@@ -2,11 +2,11 @@
 kind: BucketClass
 apiVersion: objectstorage.k8s.io/v1alpha1
 metadata:
-  name: cosi-provisioner-sample
+  name: cosi-driver-sample
   labels:
-    app.kubernetes.io/part-of: cosi-provisioner-sample
-    app.kubernetes.io/name: cosi-provisioner-sample
-provisioner: cosi-provisioner-sample.scality.com
+    app.kubernetes.io/part-of: cosi-driver-sample
+    app.kubernetes.io/name: cosi-driver-sample
+provisioner: cosi-driver-sample.scality.com
 isDefaultBucketClass: true
 allowedNamespaces:
   - default

@@ -2,11 +2,11 @@
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: container-object-storage-interface-provisioner-sidecar
+  name: container-object-storage-interface-driver-sidecar
   labels:
-    app.kubernetes.io/part-of: container-object-storage-interface-provisioner-sidecar
+    app.kubernetes.io/part-of: container-object-storage-interface-driver-sidecar
     app.kubernetes.io/component: sidecar
-    app.kubernetes.io/name: cosi-provisioner-sample
+    app.kubernetes.io/name: cosi-driver-sample
 rules:
   - apiGroups: ["objectstorage.k8s.io"]
     resources: ["buckets", "bucketaccesses","buckets/status", "bucketaccesses/status"]

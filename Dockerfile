@@ -2,7 +2,7 @@
 
 FROM --platform=${BUILDPLATFORM} docker.io/golang:1.16.4-buster AS base
 ARG BUILDPLATFORM
-WORKDIR /usr/src/cosi-provisioner-sample
+WORKDIR /usr/src/cosi-driver-sample
 COPY go.mod go.sum ./
 RUN go mod download
 
@@ -16,8 +16,8 @@ RUN --mount=target=. \
     go build \
         -mod=readonly \
         -ldflags '-s -w -extldflags -static' \
-        -o /out/cosi-provisioner-sample \
-	./cmd/cosi-provisioner-sample/
+        -o /out/cosi-driver-sample \
+	./cmd/cosi-driver-sample/
 
 FROM base AS test
 ARG BUILDOS
@@ -29,14 +29,14 @@ RUN --mount=target=. \
     go build \
         -mod=readonly \
         -ldflags '-s -w -extldflags -static' \
-	-o /out/cosi-provisioner-sample \
-	./cmd/cosi-provisioner-sample \
+	-o /out/cosi-driver-sample \
+	./cmd/cosi-driver-sample \
 	&& \
-    rm -f /out/cosi-provisioner-sample
+    rm -f /out/cosi-driver-sample
 ENTRYPOINT ["go", "test", "-mod=readonly", "-v", "./..."]
 
 # gcr.io/distroless/static:nonroot
 FROM --platform=${TARGETPLATFORM} gcr.io/distroless/static@sha256:cd784033c94dd30546456f35de8e128390ae15c48cbee5eb7e3306857ec17631 as bin
 ARG TARGETPLATFORM
-COPY --from=build /out/cosi-provisioner-sample /
-ENTRYPOINT ["/cosi-provisioner-sample"]
+COPY --from=build /out/cosi-driver-sample /
+ENTRYPOINT ["/cosi-driver-sample"]
