@@ -125,12 +125,13 @@ jobs:
           kubectl wait --for=condition=Ready pod/object-storage-consumer
       - name: Test
         run: |
-          kubectl cp object-storage-consumer:/data/cosi/credentials.json credentials.json
+          kubectl cp object-storage-consumer:/data/cosi/credentials credentials
           kubectl cp object-storage-consumer:/data/cosi/protocolConn.json protocolConn.json
 
-          test "$(jq '.endpoint' protocolConn.json)" = '"object-storage.local"'
+          # See https://kubernetes.slack.com/archives/C017EGC1C6N/p1620683108305500
+          #test "$(jq '.endpoint' protocolConn.json)" = '"object-storage.local"'
           test "$(jq '.region' protocolConn.json)" = '"test"'
           test "$(jq '.signatureVersion' protocolConn.json)" = '"S3V4"'
 
-          test "$(jq '.CredentialsFileContents' credentials.json)" = '"# Nothing to see here"'
-          test "$(jq '.CredentialsFilePath' credentials.json)" = '".aws/credentials"'
+          test "$(jq '.CredentialsFileContents' credentials)" = '"# Nothing to see here"'
+          test "$(jq '.CredentialsFilePath' credentials)" = '".aws/credentials"'
