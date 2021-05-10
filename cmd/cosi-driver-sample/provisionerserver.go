@@ -36,10 +36,6 @@ type bucket struct {
 	bucketId   uuid.UUID
 	bucketName string
 	parameters map[string]string
-
-	accountsLock   sync.RWMutex
-	accountsByName map[string]*account
-	accountsByUUID map[uuid.UUID]*account
 }
 
 type provisionerServer struct {
@@ -48,6 +44,10 @@ type provisionerServer struct {
 	bucketsLock   sync.RWMutex
 	bucketsByName map[string]*bucket
 	bucketsByUUID map[uuid.UUID]*bucket
+
+	accountsLock   sync.RWMutex
+	accountsByName map[string]*account
+	accountsByUUID map[uuid.UUID]*account
 }
 
 // Type-check
@@ -57,6 +57,9 @@ func NewProvisionerServer() spec.ProvisionerServer {
 	return &provisionerServer{
 		bucketsByName: make(map[string]*bucket),
 		bucketsByUUID: make(map[uuid.UUID]*bucket),
+
+		accountsByName: make(map[string]*account),
+		accountsByUUID: make(map[uuid.UUID]*account),
 	}
 }
 
@@ -80,9 +83,6 @@ func (s *provisionerServer) ProvisionerCreateBucket(ctx context.Context, req *sp
 				bucketId:   uuid.New(),
 				bucketName: req.Name,
 				parameters: req.Parameters,
-
-				accountsByName: make(map[string]*account),
-				accountsByUUID: make(map[uuid.UUID]*account),
 			}
 
 			s.bucketsByUUID[b.bucketId] = b
@@ -135,20 +135,28 @@ func (s *provisionerServer) ProvisionerGrantBucketAccess(ctx context.Context, re
 	}
 
 	s.bucketsLock.RLock()
-	b, exists := s.bucketsByUUID[id]
+	_, exists := s.bucketsByUUID[id]
 	s.bucketsLock.RUnlock()
 
 	if !exists {
 		return nil, status.Error(codes.NotFound, "No such bucket")
 	}
 
-	b.accountsLock.RLock()
-	a, exists := b.accountsByName[req.AccountName]
-	b.accountsLock.RUnlock()
+	s.accountsLock.RLock()
+	a, exists := s.accountsByName[req.AccountName]
+	s.accountsLock.RUnlock()
 
 	if !exists {
-		b.accountsLock.Lock()
-		a, exists = b.accountsByName[req.AccountName]
+		s.bucketsLock.RLock()
+		defer s.bucketsLock.RUnlock()
+		_, bucketExists := s.bucketsByUUID[id]
+
+		if !bucketExists {
+			return nil, status.Error(codes.NotFound, "No such bucket")
+		}
+
+		s.accountsLock.Lock()
+		a, exists = s.accountsByName[req.AccountName]
 
 		if !exists {
 			a = &account{
@@ -158,11 +166,11 @@ func (s *provisionerServer) ProvisionerGrantBucketAccess(ctx context.Context, re
 				parameters:   req.Parameters,
 			}
 
-			b.accountsByUUID[a.accountId] = a
-			b.accountsByName[a.accountName] = a
+			s.accountsByUUID[a.accountId] = a
+			s.accountsByName[a.accountName] = a
 		}
 
-		b.accountsLock.Unlock()
+		s.accountsLock.Unlock()
 	}
 
 	if !reflect.DeepEqual(a.parameters, req.Parameters) {
@@ -180,37 +188,25 @@ func (s *provisionerServer) ProvisionerGrantBucketAccess(ctx context.Context, re
 }
 
 func (s *provisionerServer) ProvisionerRevokeBucketAccess(ctx context.Context, req *spec.ProvisionerRevokeBucketAccessRequest) (*spec.ProvisionerRevokeBucketAccessResponse, error) {
-	bucketId, err := uuid.Parse(req.BucketId)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "Invalid BucketId")
-	}
 	accountId, err := uuid.Parse(req.AccountId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid AccountId")
 	}
 
-	s.bucketsLock.RLock()
-	b, exists := s.bucketsByUUID[bucketId]
-	s.bucketsLock.RUnlock()
-
-	if !exists {
-		return nil, status.Error(codes.NotFound, "No such bucket")
-	}
-
-	b.accountsLock.RLock()
-	_, exists = b.accountsByUUID[accountId]
-	b.accountsLock.RUnlock()
+	s.accountsLock.RLock()
+	_, exists := s.accountsByUUID[accountId]
+	s.accountsLock.RUnlock()
 
 	if exists {
-		b.accountsLock.Lock()
-		a, exists := b.accountsByUUID[accountId]
+		s.accountsLock.Lock()
+		a, exists := s.accountsByUUID[accountId]
 
 		if exists {
-			delete(b.accountsByName, a.accountName)
-			delete(b.accountsByUUID, a.accountId)
+			delete(s.accountsByName, a.accountName)
+			delete(s.accountsByUUID, a.accountId)
 		}
 
-		b.accountsLock.Unlock()
+		s.accountsLock.Unlock()
 	}
 
 	return &spec.ProvisionerRevokeBucketAccessResponse{}, nil
