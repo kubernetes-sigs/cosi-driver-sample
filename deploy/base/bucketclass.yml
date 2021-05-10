@@ -12,8 +12,6 @@ allowedNamespaces:
   - default
 protocol:
   s3:
-    bucketName: unused
-    endpoint: object-storage.local
     region: test
     signatureVersion: S3V4
 deletionPolicy: Delete
