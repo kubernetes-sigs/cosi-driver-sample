@@ -181,9 +181,8 @@ func (s *provisionerServer) ProvisionerGrantBucketAccess(ctx context.Context, re
 	}
 
 	return &spec.ProvisionerGrantBucketAccessResponse{
-		AccountId:               a.accountId.String(),
-		CredentialsFileContents: "# Nothing to see here",
-		CredentialsFilePath:     ".aws/credentials",
+		AccountId:   a.accountId.String(),
+		Credentials: "# Nothing to see here",
 	}, nil
 }
 

@@ -45,8 +45,6 @@ var _ = Describe("ProvisionerServer", func() {
 			Protocol: &spec.Protocol{
 				Type: &spec.Protocol_S3{
 					S3: &spec.S3{
-						Endpoint:         "https://object-storage.internal",
-						BucketName:       bucketName,
 						Region:           "test",
 						SignatureVersion: spec.S3SignatureVersion_S3V4,
 					},
@@ -94,7 +92,6 @@ var _ = Describe("ProvisionerServer", func() {
 				Protocol: &spec.Protocol{
 					Type: &spec.Protocol_AzureBlob{
 						AzureBlob: &spec.AzureBlob{
-							ContainerName:  "test-azure-blob-container",
 							StorageAccount: "test-sa",
 						},
 					},
@@ -174,8 +171,7 @@ var _ = Describe("ProvisionerServer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(aresp2.AccountId).To(Equal(aresp1.AccountId))
-			Expect(aresp2.CredentialsFileContents).To(Equal(aresp1.CredentialsFileContents))
-			Expect(aresp2.CredentialsFilePath).To(Equal(aresp1.CredentialsFilePath))
+			Expect(aresp2.Credentials).To(Equal(aresp1.Credentials))
 		})
 
 		It("Handles requests for access to non-existing buckets", func() {
