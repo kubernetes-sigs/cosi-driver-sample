@@ -125,8 +125,17 @@ jobs:
           kubectl wait --for=condition=Ready pod/object-storage-consumer
       - name: Test
         run: |
+          set -x
+
+          # For debugging purposes
+          kubectl exec -t object-storage-consumer -c app -- ls -al /data/cosi
+
           kubectl cp object-storage-consumer:/data/cosi/credentials credentials
           kubectl cp object-storage-consumer:/data/cosi/protocolConn.json protocolConn.json
+
+          # For debugging purposes
+          cat credentials
+          cat protocolConn.json
 
           # See https://kubernetes.slack.com/archives/C017EGC1C6N/p1620683108305500
           #test "$(jq '.endpoint' protocolConn.json)" = '"object-storage.local"'
