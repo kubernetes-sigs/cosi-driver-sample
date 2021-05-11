@@ -1,4 +1,4 @@
-# syntax = docker/dockerfile:1-experimental
+# syntax = docker/dockerfile:1.2.1
 
 FROM --platform=${BUILDPLATFORM} docker.io/golang:1.16.4-buster AS base
 ARG BUILDPLATFORM
