@@ -18,6 +18,7 @@ import (
 
 	"k8s.io/klog/v2"
 
+	"github.com/scality/cosi-driver-sample/internal/provisionerserver"
 	"github.com/scality/cosi-driver-sample/pkg/cosidriver"
 )
 
@@ -33,7 +34,7 @@ func main() {
 
 	defer klog.Flush()
 
-	provisionerServer := NewProvisionerServer()
+	provisionerServer := provisionerserver.NewProvisionerServer()
 
 	err := cosidriver.Run(*endpoint, driverName, provisionerServer)
 	if err != nil {

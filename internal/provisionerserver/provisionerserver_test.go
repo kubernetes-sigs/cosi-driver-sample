@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main_test
+package provisionerserver_test
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 
 	spec "sigs.k8s.io/container-object-storage-interface-spec"
 
-	main "github.com/scality/cosi-driver-sample/cmd/cosi-driver-sample"
+	"github.com/scality/cosi-driver-sample/internal/provisionerserver"
 )
 
 var _ = Describe("ProvisionerServer", func() {
@@ -36,7 +36,7 @@ var _ = Describe("ProvisionerServer", func() {
 
 	BeforeEach(func() {
 		ctx = context.TODO()
-		provisionerServer = main.NewProvisionerServer()
+		provisionerServer = provisionerserver.NewProvisionerServer()
 	})
 
 	mkCreateBucketRequest := func(bucketName string) *spec.ProvisionerCreateBucketRequest {
