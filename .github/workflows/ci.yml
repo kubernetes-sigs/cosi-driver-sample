@@ -70,10 +70,25 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Extrace container image metadata
+        id: meta
+        uses: docker/metadata-action@v3.1.0
+        with:
+          images: cosi-driver-sample
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=ci
       - name: Build
         uses: docker/build-push-action@v2.4.0
         with:
-          tags: cosi-driver-sample:ci
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           push: false
           outputs: |
             type=docker,dest=cosi-driver-sample.tar
