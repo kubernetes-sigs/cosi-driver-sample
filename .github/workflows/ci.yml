@@ -1,0 +1,163 @@
+---
+name: CI
+"on":
+  - push
+  - pull_request
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          version: v1.39.0
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.3.0
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.5
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build test container
+        uses: docker/build-push-action@v2.4.0
+        with:
+          tags: cosi-driver-sample-test:ci
+          push: false
+          load: true
+          target: "test"
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Run tests
+        run: |
+          docker run \
+              -v $(pwd):/usr/src/cosi-driver-sample:ro \
+              cosi-driver-sample-test:ci
+      - name: Move cache
+        # Temporary fix
+        # See https://github.com/docker/build-push-action/blob/17822e4df435afa2aa88ec7d85b56ff55446ca36/docs/advanced/cache.md#github-cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.3.0
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.5
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Extrace container image metadata
+        id: meta
+        uses: docker/metadata-action@v3.1.0
+        with:
+          images: cosi-driver-sample
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=ci
+      - name: Build
+        uses: docker/build-push-action@v2.4.0
+        with:
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          push: false
+          outputs: |
+            type=docker,dest=cosi-driver-sample.tar
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+      - name: Move cache
+        # Temporary fix
+        # See https://github.com/docker/build-push-action/blob/17822e4df435afa2aa88ec7d85b56ff55446ca36/docs/advanced/cache.md#github-cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v2.2.3
+        with:
+          name: container-images
+          path: cosi-driver-sample.tar
+
+  e2e:
+    name: E2E
+    needs:
+      - "build"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Retrieve artifacts
+        uses: actions/download-artifact@v2.0.9
+        with:
+          name: container-images
+      - name: Start Kind cluster
+        uses: helm/kind-action@v1.1.0
+        with:
+          cluster_name: kind
+      - name: Import container images into Kind cluster
+        run: |
+          kind load image-archive cosi-driver-sample.tar
+      - name: Deploy COSI prerequisites
+        run: |
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-api
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-controller
+          kubectl apply -k github.com/kubernetes-sigs/container-object-storage-interface-csi-adapter
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Deploy
+        run: |
+          kubectl apply -k deploy/ci/
+          kubectl wait --for=condition=available deployment/cosi-driver-sample
+
+          kubectl wait --for=condition=Ready pod/object-storage-consumer
+      - name: Test
+        run: |
+          set -x
+
+          # For debugging purposes
+          kubectl exec -t object-storage-consumer -c app -- ls -al /data/cosi
+
+          kubectl cp object-storage-consumer:/data/cosi/credentials credentials
+          kubectl cp object-storage-consumer:/data/cosi/protocolConn.json protocolConn.json
+
+          # For debugging purposes
+          cat credentials
+          cat protocolConn.json
+
+          # See https://kubernetes.slack.com/archives/C017EGC1C6N/p1620683108305500
+          #test "$(jq '.endpoint' protocolConn.json)" = '"object-storage.local"'
+          test "$(jq '.region' protocolConn.json)" = '"test"'
+          test "$(jq '.signatureVersion' protocolConn.json)" = '"S3V4"'
+
+          # This may be unintentional, a bug in the CSI driver.
+          # See https://kubernetes.slack.com/archives/C017EGC1C6N/p1620729488311200
+          test "$(jq '.CredentialsFileContents' credentials)" = '"# Nothing to see here"'
+          test "$(jq '.CredentialsFilePath' credentials)" = '""'
