@@ -17,4 +17,3 @@ spec:
         driver: objectstorage.k8s.io
         volumeAttributes:
           bar-name: cosi-driver-sample-bar
-          bar-namespace: default
