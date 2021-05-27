@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	driverName = "cosi-driver-sample.sigs.k8s.io"
+	driverName = "sample-driver.objectstorage.k8s.io"
 )
 
 func main() {

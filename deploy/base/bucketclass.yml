@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/part-of: cosi-driver-sample
     app.kubernetes.io/name: cosi-driver-sample
-provisioner: cosi-driver-sample.sigs.k8s.io
+provisioner: sample-driver.objectstorage.k8s.io
 isDefaultBucketClass: true
 allowedNamespaces:
   - default
