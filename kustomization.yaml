@@ -1,0 +1,62 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: sample-cosi-driver
+
+commonAnnotations:
+  cosi.storage.k8s.io/authors: "Kubernetes Authors"
+  cosi.storage.k8s.io/license: "Apache V2"
+  cosi.storage.k8s.io/support: "https://github.com/kubernetes-sigs/container-object-storage-api"
+
+commonLabels:
+  app.kubernetes.io/part-of: container-object-storage-interface
+  app.kubernetes.io/component: driver-sample
+  app.kubernetes.io/version: main
+  app.kubernetes.io/name: cosi-driver-sample
+
+configMapGenerator: 
+- name: cosi-driver-sample-config
+  env: resources/cosi-driver-sample.properties
+generatorOptions:         
+  disableNameSuffixHash: true
+  labels:                    
+    generated-by: "kustomize"
+
+resources:
+- resources/ns.yaml
+- resources/sa.yaml
+- resources/rbac.yaml
+- resources/deployment.yaml
+
+configurations:
+ - resources/kustomizeconfig.yaml
+
+vars:
+  - name: PROVISIONER_IMAGE_ORG
+    objref:
+      name: cosi-driver-config
+      kind: ConfigMap
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.OBJECTSTORAGE_PROVISIONER_IMAGE_ORG
+  - name: PROVISIONER_IMAGE_VERSION
+    objref:
+      name: cosi-driver-config
+      kind: ConfigMap
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.OBJECTSTORAGE_PROVISIONER_IMAGE_VERSION
+  - name: DRIVER_IMAGE_ORG
+    objref:
+      name: cosi-driver-config
+      kind: ConfigMap
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.DRIVER_IMAGE_ORG
+  - name: DRIVER_IMAGE_VERSION
+    objref:
+      name: cosi-driver-config
+      kind: ConfigMap
+      apiVersion: v1
+    fieldref:
+      fieldpath: data.DRIVER_IMAGE_VERSION
