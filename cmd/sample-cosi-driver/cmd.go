@@ -31,6 +31,10 @@ const provisionerName = "sample-driver.objectstorage.k8s.io"
 
 var (
 	driverAddress = "unix:///var/lib/cosi/cosi.sock"
+
+	objectStoreAccessKey = ""
+	objectStoreSecretKey = ""
+	objectStoreEndpoint  = ""
 )
 
 var cmd = &cobra.Command{
@@ -63,6 +67,24 @@ func init() {
 		driverAddress,
 		"path to unix domain socket where driver should listen")
 
+	stringFlag(&objectStoreEndpoint,
+		"object-store-endpoint",
+		"m",
+		objectStoreEndpoint,
+		"endpoint where object store is listening")
+
+	stringFlag(&objectStoreAccessKey,
+		"object-store-access-key",
+		"a",
+		objectStoreAccessKey,
+		"access key for object store")
+
+	stringFlag(&objectStoreSecretKey,
+		"object-store-secret-key",
+		"s",
+		objectStoreSecretKey,
+		"secret key for object store")
+
 	viper.BindPFlags(cmd.PersistentFlags())
 	cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
 		if viper.IsSet(f.Name) && viper.GetString(f.Name) != "" {
@@ -72,7 +94,8 @@ func init() {
 }
 
 func run(ctx context.Context, args []string) error {
-	identityServer, bucketProvisioner, err := pkg.NewDriver(ctx, provisionerName)
+	identityServer, bucketProvisioner, err := pkg.NewDriver(ctx, provisionerName, objectStoreEndpoint,
+		objectStoreAccessKey, objectStoreSecretKey)
 	if err != nil {
 		return err
 	}

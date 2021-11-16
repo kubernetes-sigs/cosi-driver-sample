@@ -17,7 +17,10 @@ import (
 	"context"
 )
 
-func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *ProvisionerServer, error) {
+func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, objectStoreAccessKey,
+	objectStoreSecretKey string) (*IdentityServer, *ProvisionerServer, error) {
+	// todo instantiate client here
+	_, _, _ = objectStoreEndpoint, objectStoreAccessKey, objectStoreSecretKey
 	return &IdentityServer{
 			provisioner: provisioner,
 		}, &ProvisionerServer{

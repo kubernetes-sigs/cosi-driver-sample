@@ -39,12 +39,18 @@ spec:
       - name: cosi-driver
         image: sample-cosi-driver:latest
         imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: objectstorage-provisioner
         volumeMounts:
         - mountPath: /var/lib/cosi
           name: socket
       - name: objectstorage-provisioner-sidecar
         image: objectstorage-sidecar:latest
         imagePullPolicy: IfNotPresent
+        envFrom:
+        - secretRef:
+            name: objectstorage-provisioner
         env:
         - name: POD_NAMESPACE
           valueFrom:
