@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultRegion = "us-west-1"
+	DefaultRegion = "us-west-1"
 )
 
 type objectScaleService struct {
@@ -54,7 +54,7 @@ func NewObjectScaleClient(objectScaleGtwEndpoint ServiceEndpoint, s3Endpoint Ser
 	client.sess = session.Must(session.NewSession(&aws.Config{
 		HTTPClient:       httpClient,
 		Credentials:      client.credentials,
-		Region:           aws.String(defaultRegion),
+		Region:           aws.String(DefaultRegion),
 		S3ForcePathStyle: aws.Bool(true),
 	}))
 	client.iam = client.newIamClient(objectScaleGtwEndpoint, client.credentials)

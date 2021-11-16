@@ -15,15 +15,24 @@ package pkg
 
 import (
 	"context"
+	"fmt"
 	"sigs.k8s.io/cosi-driver-sample/pkg/objectscale"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type ProvisionerServer struct {
 	provisioner       string
+	endpoint          string
+	accessKeyId       string
+	secretKeyId       string
 	objectScaleClient *objectscale.ObjectScaleClient
 }
 
@@ -34,19 +43,63 @@ type ProvisionerServer struct {
 //    nil -                   Bucket successfully created
 //    codes.AlreadyExists -   Bucket already exists. No more retries
 //    non-nil err -           Internal error                                [requeue'd with exponential backoff]
-func (s *ProvisionerServer) ProvisionerCreateBucket(ctx context.Context,
-	req *cosi.ProvisionerCreateBucketRequest) (*cosi.ProvisionerCreateBucketResponse, error) {
-	bucketID := "fake_bucket"
+func (s *ProvisionerServer) ProvisionerCreateBucket(
+	ctx context.Context,
+	req *cosi.ProvisionerCreateBucketRequest,
+) (*cosi.ProvisionerCreateBucketResponse, error) {
+	fmt.Println("Creating bucket " + req.GetName())
 
-	return &cosi.ProvisionerCreateBucketResponse{
-		BucketId: bucketID,
-	}, nil
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
+		Endpoint:         aws.String(s.endpoint),
+		Region:           getS3Region(req.GetProtocol()),
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+
+	s3Client := s3.New(session.New(s3Config))
+	out, err := s3Client.CreateBucket(
+		&s3.CreateBucketInput{
+			Bucket: aws.String(req.GetName()), // Required
+		})
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, status.Error(codes.Internal, "ProvisionerCreateBucket: operation failed")
+	}
+
+	fmt.Println("Created bucket " + req.GetName() + " : " + out.GoString())
+
+	return &cosi.ProvisionerCreateBucketResponse{BucketId: req.GetName()}, nil
 }
 
-func (s *ProvisionerServer) ProvisionerDeleteBucket(ctx context.Context,
-	req *cosi.ProvisionerDeleteBucketRequest) (*cosi.ProvisionerDeleteBucketResponse, error) {
+func (s *ProvisionerServer) ProvisionerDeleteBucket(
+	ctx context.Context,
+	req *cosi.ProvisionerDeleteBucketRequest,
+) (*cosi.ProvisionerDeleteBucketResponse, error) {
+	fmt.Println("Deleting bucket id " + req.GetBucketId())
 
-	return nil, status.Error(codes.Unimplemented, "ProvisionerCreateBucket: not implemented")
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
+		Endpoint:         aws.String(s.endpoint),
+		Region:           getS3Region(nil), // ahaha, no protocol in delete request!
+		DisableSSL:       aws.Bool(true),
+		S3ForcePathStyle: aws.Bool(true),
+	}
+
+	s3Client := s3.New(session.New(s3Config))
+
+	out, err := s3Client.DeleteBucket(
+		&s3.DeleteBucketInput{
+			Bucket: aws.String(req.GetBucketId()), // Required
+		})
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, status.Error(codes.Internal, "ProvisionerDeleteBucket: operation failed")
+	}
+
+	fmt.Println("Deleted bucket id " + req.GetBucketId() + " : " + out.GoString())
+
+	return &cosi.ProvisionerDeleteBucketResponse{}, nil
 }
 
 func (s *ProvisionerServer) ProvisionerGrantBucketAccess(ctx context.Context,
@@ -64,4 +117,12 @@ func (s *ProvisionerServer) ProvisionerRevokeBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerRevokeBucketAccessRequest) (*cosi.ProvisionerRevokeBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "ProvisionerCreateBucket: not implemented")
+}
+
+func getS3Region(protocol *cosi.Protocol) *string {
+	if protocol != nil && protocol.GetS3() != nil && protocol.GetS3().GetRegion() != "" {
+		return aws.String(protocol.GetS3().GetRegion())
+	} else {
+		return aws.String(objectscale.DefaultRegion)
+	}
 }
