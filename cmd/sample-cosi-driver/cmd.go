@@ -16,6 +16,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -94,17 +95,28 @@ func init() {
 }
 
 func run(ctx context.Context, args []string) error {
-	identityServer, bucketProvisioner, err := pkg.NewDriver(ctx, provisionerName, objectStoreEndpoint,
-		objectStoreAccessKey, objectStoreSecretKey)
+	fmt.Println("Starting COSI driver " + provisionerName)
+	fmt.Println("S3 endpoint: " + objectStoreEndpoint)
+
+	identityServer, bucketProvisioner, err := pkg.NewDriver(
+		ctx,
+		provisionerName,
+		objectStoreEndpoint,
+		objectStoreAccessKey,
+		objectStoreSecretKey,
+	)
 	if err != nil {
 		return err
 	}
 
-	server, err := provisioner.NewDefaultCOSIProvisionerServer(driverAddress,
+	server, err := provisioner.NewDefaultCOSIProvisionerServer(
+		driverAddress,
 		identityServer,
-		bucketProvisioner)
+		bucketProvisioner,
+	)
 	if err != nil {
 		return err
 	}
+
 	return server.Run(ctx)
 }
