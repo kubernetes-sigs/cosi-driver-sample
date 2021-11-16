@@ -15,12 +15,41 @@ package pkg
 
 import (
 	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/google/uuid"
 )
 
 func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, objectStoreAccessKey,
 	objectStoreSecretKey string) (*IdentityServer, *ProvisionerServer, error) {
-	// todo instantiate client here
-	_, _, _ = objectStoreEndpoint, objectStoreAccessKey, objectStoreSecretKey
+	region := "US"
+	creds := credentials.NewStaticCredentials(objectStoreAccessKey, objectStoreSecretKey, "")
+
+	fmt.Printf("Connecting to Object store...\n")
+	sess, err := session.NewSession(&aws.Config{
+		Endpoint:    &objectStoreEndpoint,
+		S3ForcePathStyle: aws.Bool(true),
+		Credentials: creds,
+		Region:      &region,
+	})
+
+
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		svc := s3.New(sess)
+		// create test bucket to check connection
+		_, err = svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(uuid.NewString())})
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Printf("Successfully connected to Object store %s\n", objectStoreEndpoint)
+		}
+	}
+
 	return &IdentityServer{
 			provisioner: provisioner,
 		}, &ProvisionerServer{
