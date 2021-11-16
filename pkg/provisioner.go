@@ -50,7 +50,7 @@ func (s *ProvisionerServer) ProvisionerCreateBucket(
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
 		Endpoint:         aws.String(s.endpoint),
-		Region:           aws.String("manatee_AB"), // TODO req.GetProtocol().GetS3().GetRegion()
+		Region:           getS3Region(req.GetProtocol()),
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 	}
@@ -70,14 +70,16 @@ func (s *ProvisionerServer) ProvisionerCreateBucket(
 	return &cosi.ProvisionerCreateBucketResponse{BucketId: req.GetName()}, nil
 }
 
-func (s *ProvisionerServer) ProvisionerDeleteBucket(ctx context.Context,
-	req *cosi.ProvisionerDeleteBucketRequest) (*cosi.ProvisionerDeleteBucketResponse, error) {
+func (s *ProvisionerServer) ProvisionerDeleteBucket(
+	ctx context.Context,
+	req *cosi.ProvisionerDeleteBucketRequest,
+) (*cosi.ProvisionerDeleteBucketResponse, error) {
 	fmt.Println("Deleting bucket id " + req.GetBucketId())
 
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
 		Endpoint:         aws.String(s.endpoint),
-		Region:           aws.String("manatee_AB"), // TODO req.GetProtocol().GetS3().GetRegion()
+		Region:           getS3Region(nil), // ahaha, no protocol in delete request!
 		DisableSSL:       aws.Bool(true),
 		S3ForcePathStyle: aws.Bool(true),
 	}
@@ -111,4 +113,12 @@ func (s *ProvisionerServer) ProvisionerRevokeBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerRevokeBucketAccessRequest) (*cosi.ProvisionerRevokeBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "ProvisionerCreateBucket: not implemented")
+}
+
+func getS3Region(protocol *cosi.Protocol) *string {
+	if protocol != nil && protocol.GetS3() != nil && protocol.GetS3().GetRegion() != "" {
+		return aws.String(protocol.GetS3().GetRegion())
+	} else {
+		return aws.String("US")
+	}
 }

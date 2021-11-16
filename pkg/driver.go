@@ -15,15 +15,10 @@ package pkg
 
 import (
 	"context"
-	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/google/uuid"
 )
 
-func NewDriver(ctx context.Context,
+func NewDriver(
+	ctx context.Context,
 	provisionerName, objectStoreEndpoint, objectStoreAccessKey, objectStoreSecretKey string,
 ) (*IdentityServer, *ProvisionerServer, error) {
 	provisionerServer := ProvisionerServer{
