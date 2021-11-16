@@ -29,11 +29,10 @@ import (
 )
 
 type ProvisionerServer struct {
-	provisioner string
-	endpoint    string
-	accessKeyId string
-	secretKeyId string
 	provisioner       string
+	endpoint          string
+	accessKeyId       string
+	secretKeyId       string
 	objectScaleClient *objectscale.ObjectScaleClient
 }
 
@@ -124,6 +123,6 @@ func getS3Region(protocol *cosi.Protocol) *string {
 	if protocol != nil && protocol.GetS3() != nil && protocol.GetS3().GetRegion() != "" {
 		return aws.String(protocol.GetS3().GetRegion())
 	} else {
-		return aws.String("US")
+		return aws.String(objectscale.DefaultRegion)
 	}
 }

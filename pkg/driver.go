@@ -24,15 +24,18 @@ import (
 	"sigs.k8s.io/cosi-driver-sample/pkg/objectscale"
 )
 
-func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, objectStoreAccessKey,
-	objectStoreSecretKey string) (*IdentityServer, *ProvisionerServer, error) {
-
+func NewDriver(
+	ctx context.Context,
+	provisioner, objectStoreEndpoint, objectStoreAccessKey, objectStoreSecretKey string,
+) (*IdentityServer, *ProvisionerServer, error) {
 	obClient := objectscale.NewObjectScaleClient(
 		objectscale.ServiceEndpoint{Host: "", Port: 32585},
 		objectscale.ServiceEndpoint{Host: "", Port: 31651},
-		objectStoreAccessKey, objectStoreSecretKey)
+		objectStoreAccessKey,
+		objectStoreSecretKey,
+	)
 
-	region := "US"
+	region := objectscale.DefaultRegion
 	creds := credentials.NewStaticCredentials(objectStoreAccessKey, objectStoreSecretKey, "")
 
 	fmt.Printf("Connecting to Object store...\n")
@@ -54,21 +57,15 @@ func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, obj
 		} else {
 			fmt.Printf("Successfully connected to Object store %s\n", objectStoreEndpoint)
 		}
-func NewDriver(
-	ctx context.Context,
-	provisionerName, objectStoreEndpoint, objectStoreAccessKey, objectStoreSecretKey string,
-) (*IdentityServer, *ProvisionerServer, error) {
-	provisionerServer := ProvisionerServer{
-		provisioner: provisionerName,
-		accessKeyId: objectStoreAccessKey,
-		secretKeyId: objectStoreSecretKey,
-		endpoint:    objectStoreEndpoint,
 	}
 
 	return &IdentityServer{
 			provisioner: provisioner,
 		}, &ProvisionerServer{
 			provisioner:       provisioner,
+			endpoint:          objectStoreEndpoint,
+			accessKeyId:       objectStoreAccessKey,
+			secretKeyId:       objectStoreSecretKey,
 			objectScaleClient: obClient,
 		}, nil
 }
