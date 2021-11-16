@@ -37,14 +37,14 @@ spec:
         emptyDir: {}
       containers:
       - name: cosi-driver
-        image: $(DRIVER_IMAGE_ORG)/sample-cosi-driver:$(DRIVER_IMAGE_VERSION)
-        imagePullPolicy: Always
+        image: sample-cosi-driver:latest
+        imagePullPolicy: IfNotPresent
         volumeMounts:
         - mountPath: /var/lib/cosi
           name: socket
       - name: objectstorage-provisioner-sidecar
-        image: $(PROVISIONER_IMAGE_ORG)/objectstorage-sidecar:$(PROVISIONER_IMAGE_VERSION)
-        imagePullPolicy: Always
+        image: objectstorage-sidecar:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: POD_NAMESPACE
           valueFrom:
