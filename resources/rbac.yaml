@@ -16,7 +16,7 @@ rules:
   resources: ["leases"]
   verbs: ["get", "watch", "list", "delete", "update", "create"]
 - apiGroups: [""]
-  resources: ["events"]
+  resources: ["events", "secrets"]
   verbs: ["get", "delete", "update", "create"]
 ---
 kind: ClusterRoleBinding
