@@ -29,3 +29,9 @@ include release-tools/build.make
 
 REGISTRY_NAME=quay.io/containerobjectstorage
 IMAGE_TAGS=canary
+
+image:
+	docker build -t sample-cosi-driver:latest -f Dockerfile  .
+
+kind:
+	kind load docker-image sample-cosi-driver:latest
