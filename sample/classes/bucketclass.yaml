@@ -1,0 +1,17 @@
+#
+# Note, this resource would typically be created by the kubeadmin and
+# not the end user
+#
+kind: BucketClass
+apiVersion: objectstorage.k8s.io/v1alpha1
+metadata:
+  name: sample-bc
+provisioner: sample-driver.objectstorage.k8s.io
+isDefaultBucketClass: true
+allowedNamespaces:
+- default
+protocol:
+  s3:
+    region: us-east-1
+    signatureVersion: S3V4
+deletionPolicy: Delete
