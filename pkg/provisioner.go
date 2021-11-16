@@ -16,6 +16,7 @@ package pkg
 import (
 	"context"
 	"fmt"
+	"sigs.k8s.io/cosi-driver-sample/pkg/objectscale"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -32,6 +33,8 @@ type ProvisionerServer struct {
 	endpoint    string
 	accessKeyId string
 	secretKeyId string
+	provisioner       string
+	objectScaleClient *objectscale.ObjectScaleClient
 }
 
 // ProvisionerCreateBucket is an idempotent method for creating buckets
@@ -102,6 +105,8 @@ func (s *ProvisionerServer) ProvisionerDeleteBucket(
 
 func (s *ProvisionerServer) ProvisionerGrantBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerGrantBucketAccessRequest) (*cosi.ProvisionerGrantBucketAccessResponse, error) {
+
+	// s.objectScaleClient.Iam.CreateUser()
 
 	return &cosi.ProvisionerGrantBucketAccessResponse{
 		AccountId:   "fake_acc",
