@@ -101,7 +101,10 @@ func (s *ProvisionerServer) ProvisionerDeleteBucket(ctx context.Context,
 func (s *ProvisionerServer) ProvisionerGrantBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerGrantBucketAccessRequest) (*cosi.ProvisionerGrantBucketAccessResponse, error) {
 
-	return nil, status.Error(codes.Unimplemented, "ProvisionerCreateBucket: not implemented")
+	return &cosi.ProvisionerGrantBucketAccessResponse{
+		AccountId:   "fake_acc",
+		Credentials: "{\"username\":\"fake_user\", \"password\": \"fake_pass\"}",
+	}, nil
 }
 
 func (s *ProvisionerServer) ProvisionerRevokeBucketAccess(ctx context.Context,
