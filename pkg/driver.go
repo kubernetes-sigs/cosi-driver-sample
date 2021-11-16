@@ -21,21 +21,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/google/uuid"
+	"sigs.k8s.io/cosi-driver-sample/pkg/objectscale"
 )
 
 func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, objectStoreAccessKey,
 	objectStoreSecretKey string) (*IdentityServer, *ProvisionerServer, error) {
+
+	obClient := objectscale.NewObjectScaleClient(
+		objectscale.ServiceEndpoint{Host: "", Port: 32585},
+		objectscale.ServiceEndpoint{Host: "", Port: 31651},
+		objectStoreAccessKey, objectStoreSecretKey)
+
 	region := "US"
 	creds := credentials.NewStaticCredentials(objectStoreAccessKey, objectStoreSecretKey, "")
 
 	fmt.Printf("Connecting to Object store...\n")
 	sess, err := session.NewSession(&aws.Config{
-		Endpoint:    &objectStoreEndpoint,
+		Endpoint:         &objectStoreEndpoint,
 		S3ForcePathStyle: aws.Bool(true),
-		Credentials: creds,
-		Region:      &region,
+		Credentials:      creds,
+		Region:           &region,
 	})
-
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -53,6 +59,7 @@ func NewDriver(ctx context.Context, provisioner string, objectStoreEndpoint, obj
 	return &IdentityServer{
 			provisioner: provisioner,
 		}, &ProvisionerServer{
-			provisioner: provisioner,
+			provisioner:       provisioner,
+			objectScaleClient: obClient,
 		}, nil
 }
