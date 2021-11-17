@@ -105,11 +105,13 @@ func (s *ProvisionerServer) ProvisionerDeleteBucket(
 func (s *ProvisionerServer) ProvisionerGrantBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerGrantBucketAccessRequest) (*cosi.ProvisionerGrantBucketAccessResponse, error) {
 
+	// todo implement
 	// s.objectScaleClient.Iam.CreateUser()
 
+	// todo workaround return basic creds
 	return &cosi.ProvisionerGrantBucketAccessResponse{
-		AccountId:   "fake_acc",
-		Credentials: "{\"username\":\"fake_user\", \"password\": \"fake_pass\"}",
+		AccountId:   "test_acc",
+		Credentials: "{\"endpoint\":\"" + s.endpoint + "\", \"accessKeyId\":\"" + s.accessKeyId +"\", \"secretKeyId\": \"" + s.secretKeyId + "\"}",
 	}, nil
 }
 
