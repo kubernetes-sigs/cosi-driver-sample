@@ -62,8 +62,8 @@ func NewDriver(
 		fmt.Println(err.Error())
 	} else {
 		svc := s3.New(sess)
-		// create test bucket to check connection
-		_, err = svc.CreateBucket(&s3.CreateBucketInput{Bucket: aws.String(uuid.NewString())})
+		// list buckets to check connection
+		_, err = svc.ListBuckets(&s3.ListBucketsInput{})
 		if err != nil {
 			fmt.Println(err.Error())
 		} else {
