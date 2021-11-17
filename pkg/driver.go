@@ -21,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/google/uuid"
 	"net/url"
 	"sigs.k8s.io/cosi-driver-sample/pkg/objectscale"
 )

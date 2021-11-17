@@ -80,8 +80,12 @@ func (s *ProvisionerServer) ProvisionerGrantBucketAccess(ctx context.Context,
 
 	// todo workaround return basic creds
 	return &cosi.ProvisionerGrantBucketAccessResponse{
-		AccountId:   "test_acc",
-		Credentials: "{\"endpoint\":\"" + s.endpoint + "\", \"accessKeyId\":\"" + s.accessKeyId +"\", \"secretKeyId\": \"" + s.secretKeyId + "\"}",
+		AccountId: "test_acc",
+		Credentials: "{\"endpoint\":\"" + s.endpoint +
+			"\", \"accessKeyId\":\"" + s.accessKeyId +
+			"\", \"secretKeyId\": \"" + s.secretKeyId +
+			"\", \"bucket\": \"" + req.GetBucketId() +
+			"\"}",
 	}, nil
 }
 
