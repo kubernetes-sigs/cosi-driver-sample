@@ -21,11 +21,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
 )
 
 type ProvisionerServer struct {
@@ -49,22 +44,10 @@ func (s *ProvisionerServer) ProvisionerCreateBucket(
 ) (*cosi.ProvisionerCreateBucketResponse, error) {
 	fmt.Println("Creating bucket " + req.GetName())
 
-	s3Config := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
-		Endpoint:         aws.String(s.endpoint),
-		Region:           getS3Region(req.GetProtocol()),
-		DisableSSL:       aws.Bool(true),
-		S3ForcePathStyle: aws.Bool(true),
-	}
-
-	s3Client := s3.New(session.New(s3Config))
-	out, err := s3Client.CreateBucket(
-		&s3.CreateBucketInput{
-			Bucket: aws.String(req.GetName()), // Required
-		})
+	out, err := s.objectScaleClient.S3.CreateBucket(req.GetName())
 	if err != nil {
 		fmt.Println(err.Error())
-		return nil, status.Error(codes.Internal, "ProvisionerCreateBucket: operation failed")
+		return nil, status.Error(codes.Internal, "ProvisionerCreateBucket: operation failed: "+err.Error())
 	}
 
 	fmt.Println("Created bucket " + req.GetName() + " : " + out.GoString())
@@ -78,20 +61,7 @@ func (s *ProvisionerServer) ProvisionerDeleteBucket(
 ) (*cosi.ProvisionerDeleteBucketResponse, error) {
 	fmt.Println("Deleting bucket id " + req.GetBucketId())
 
-	s3Config := &aws.Config{
-		Credentials:      credentials.NewStaticCredentials(s.accessKeyId, s.secretKeyId, ""),
-		Endpoint:         aws.String(s.endpoint),
-		Region:           getS3Region(nil), // ahaha, no protocol in delete request!
-		DisableSSL:       aws.Bool(true),
-		S3ForcePathStyle: aws.Bool(true),
-	}
-
-	s3Client := s3.New(session.New(s3Config))
-
-	out, err := s3Client.DeleteBucket(
-		&s3.DeleteBucketInput{
-			Bucket: aws.String(req.GetBucketId()), // Required
-		})
+	out, err := s.objectScaleClient.S3.DeleteBucket(req.GetBucketId())
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, status.Error(codes.Internal, "ProvisionerDeleteBucket: operation failed")
@@ -117,12 +87,4 @@ func (s *ProvisionerServer) ProvisionerRevokeBucketAccess(ctx context.Context,
 	req *cosi.ProvisionerRevokeBucketAccessRequest) (*cosi.ProvisionerRevokeBucketAccessResponse, error) {
 
 	return nil, status.Error(codes.Unimplemented, "ProvisionerCreateBucket: not implemented")
-}
-
-func getS3Region(protocol *cosi.Protocol) *string {
-	if protocol != nil && protocol.GetS3() != nil && protocol.GetS3().GetRegion() != "" {
-		return aws.String(protocol.GetS3().GetRegion())
-	} else {
-		return aws.String(objectscale.DefaultRegion)
-	}
 }

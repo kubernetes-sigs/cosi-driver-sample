@@ -2,8 +2,9 @@ package objectscale
 
 import (
 	"crypto/tls"
-	"fmt"
 	"net/http"
+	"net/url"
+	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -21,14 +22,9 @@ type objectScaleService struct {
 	client *ObjectScaleClient
 }
 
-type ServiceEndpoint struct {
-	Host string
-	Port int
-}
-
 type ObjectScaleClient struct {
-	objectScaleGtwEndpoint ServiceEndpoint
-	s3Endpoint             ServiceEndpoint
+	objectScaleGtwEndpoint *url.URL
+	s3Endpoint             *url.URL
 
 	credentials *credentials.Credentials
 	sess        *session.Session
@@ -40,9 +36,9 @@ type ObjectScaleClient struct {
 	S3      *S3Service
 }
 
-func NewObjectScaleClient(objectScaleGtwEndpoint ServiceEndpoint, s3Endpoint ServiceEndpoint, accessKeyId, secretKey string) *ObjectScaleClient {
+func NewObjectScaleClient(objectScaleGateway, s3Endpoint *url.URL, accessKeyId, secretKey string) *ObjectScaleClient {
 	client := &ObjectScaleClient{}
-	client.objectScaleGtwEndpoint = objectScaleGtwEndpoint
+	client.objectScaleGtwEndpoint = objectScaleGateway
 	client.s3Endpoint = s3Endpoint
 	client.credentials = credentials.NewStaticCredentials(accessKeyId, secretKey, "")
 
@@ -57,8 +53,8 @@ func NewObjectScaleClient(objectScaleGtwEndpoint ServiceEndpoint, s3Endpoint Ser
 		Region:           aws.String(DefaultRegion),
 		S3ForcePathStyle: aws.Bool(true),
 	}))
-	client.iam = client.newIamClient(objectScaleGtwEndpoint, client.credentials)
-	client.s3 = client.newS3Client(s3Endpoint, client.credentials)
+	client.iam = client.newIamClient(objectScaleGateway)
+	client.s3 = client.newS3Client(s3Endpoint)
 
 	client.service.client = client
 	client.Iam = (*IamService)(&client.service)
@@ -66,13 +62,13 @@ func NewObjectScaleClient(objectScaleGtwEndpoint ServiceEndpoint, s3Endpoint Ser
 	return client
 }
 
-func (client *ObjectScaleClient) newIamClient(endpoint ServiceEndpoint, credentials *credentials.Credentials) *iam.IAM {
-	cfg := aws.NewConfig().WithEndpoint(fmt.Sprintf("https://%s:%d/iam", endpoint.Host, endpoint.Port)).WithLogLevel(aws.LogDebugWithHTTPBody)
+func (client *ObjectScaleClient) newIamClient(endpoint *url.URL) *iam.IAM {
+	cfg := aws.NewConfig().WithEndpoint(endpoint.String()).WithLogLevel(aws.LogDebugWithHTTPBody)
 	return iam.New(client.sess, cfg)
 }
 
-func (client *ObjectScaleClient) newS3Client(endpoint ServiceEndpoint, credentials *credentials.Credentials) *s3.S3 {
-	cfg := aws.NewConfig().WithEndpoint(fmt.Sprintf("https://%s:%d", endpoint.Host, endpoint.Port)).WithLogLevel(aws.LogDebugWithHTTPBody)
+func (client *ObjectScaleClient) newS3Client(endpoint *url.URL) *s3.S3 {
+	cfg := aws.NewConfig().WithEndpoint(endpoint.String()).WithLogLevel(aws.LogDebugWithHTTPBody)
 	return s3.New(client.sess, cfg)
 }
 
@@ -81,4 +77,12 @@ func HandleError(err error) error {
 		return aerr
 	}
 	return err
+}
+
+func GetS3Region(protocol *cosi.Protocol) *string {
+	if protocol != nil && protocol.GetS3() != nil && protocol.GetS3().GetRegion() != "" {
+		return aws.String(protocol.GetS3().GetRegion())
+	} else {
+		return aws.String(DefaultRegion)
+	}
 }

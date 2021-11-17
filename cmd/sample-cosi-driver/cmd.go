@@ -35,7 +35,8 @@ var (
 
 	objectStoreAccessKey = ""
 	objectStoreSecretKey = ""
-	objectStoreEndpoint  = ""
+	s3Endpoint           = ""
+	objectscaleGateway   = ""
 )
 
 var cmd = &cobra.Command{
@@ -68,11 +69,17 @@ func init() {
 		driverAddress,
 		"path to unix domain socket where driver should listen")
 
-	stringFlag(&objectStoreEndpoint,
+	stringFlag(&s3Endpoint,
 		"object-store-endpoint",
-		"m",
-		objectStoreEndpoint,
-		"endpoint where object store is listening")
+		"e",
+		s3Endpoint,
+		"ObjectStore S3 endpoint URL")
+
+	stringFlag(&objectscaleGateway,
+		"object-scale-gateway",
+		"g",
+		objectscaleGateway,
+		"ObjectScale gateway URL")
 
 	stringFlag(&objectStoreAccessKey,
 		"object-store-access-key",
@@ -96,12 +103,13 @@ func init() {
 
 func run(ctx context.Context, args []string) error {
 	fmt.Println("Starting COSI driver " + provisionerName)
-	fmt.Println("S3 endpoint: " + objectStoreEndpoint)
+	fmt.Println("S3 endpoint: " + s3Endpoint)
 
 	identityServer, bucketProvisioner, err := pkg.NewDriver(
 		ctx,
 		provisionerName,
-		objectStoreEndpoint,
+		s3Endpoint,
+		objectscaleGateway,
 		objectStoreAccessKey,
 		objectStoreSecretKey,
 	)
