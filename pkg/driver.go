@@ -17,10 +17,10 @@ import (
 	"context"
 )
 
-func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *ProvisionerServer, error) {
+func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *DriverServer, error) {
 	return &IdentityServer{
 			provisioner: provisioner,
-		}, &ProvisionerServer{
+		}, &DriverServer{
 			provisioner: provisioner,
 		}, nil
 }
