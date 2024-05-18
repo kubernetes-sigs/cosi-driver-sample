@@ -24,8 +24,8 @@ RUN go build -o build/sample-cosi-driver cmd/sample-cosi-driver/*.go
 #
 FROM gcr.io/distroless/static:latest AS runtime
 
-LABEL maintainers="Kubernetes Authors"
-LABEL description="COSI Sample Driver"
+LABEL org.opencontainers.image.maintainers="Kubernetes Authors"
+LABEL org.opencontainers.image.description="COSI Sample Driver"
 
 LABEL org.opencontainers.image.title="COSI Sample Driver"
 LABEL org.opencontainers.image.description="Container Object Storage Interface (COSI) Sample Driver"
