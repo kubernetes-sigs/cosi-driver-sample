@@ -17,7 +17,7 @@ COPY cmd/ cmd/
 ENV CGO_ENABLED=0
 
 # Build the image.
-RUN go build -o build/sample-cosi-driver cmd/sample-cosi-driver/*.go
+RUN go build -trimpath -o build/sample-cosi-driver cmd/sample-cosi-driver/*.go
 
 #
 # FINAL IMAGE
