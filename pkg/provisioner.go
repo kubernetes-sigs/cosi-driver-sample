@@ -18,11 +18,14 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/klog/v2"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	"sigs.k8s.io/cosi-driver-sample/pkg/s3"
 )
 
 type DriverServer struct {
 	provisioner string
+	client      *s3.S3Client
 }
 
 // DriverCreateBucket is an idempotent method for creating buckets
@@ -38,8 +41,26 @@ type DriverServer struct {
 //	non-nil err -           Internal error                                [requeue'd with exponential backoff]
 func (s *DriverServer) DriverCreateBucket(ctx context.Context,
 	req *cosi.DriverCreateBucketRequest) (*cosi.DriverCreateBucketResponse, error) {
+	bucketName := req.GetName()
+	parameters := req.GetParameters()
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	if s.client.BucketExists(bucketName) {
+		if s.client.IsBucketEqual(bucketName, parameters) {
+			klog.InfoS("Bucket with the same parameters already exists, no error", "name", bucketName)
+			return &cosi.DriverCreateBucketResponse{BucketId: bucketName}, nil
+		} else {
+			klog.InfoS("Bucket already exists", "name", bucketName)
+			return nil, status.Errorf(codes.AlreadyExists, "Bucket already exists: %s", bucketName)
+		}
+	}
+
+	err := s.client.CreateBucket(bucketName, parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	klog.InfoS("Successfully created bucket", "name", bucketName)
+	return &cosi.DriverCreateBucketResponse{BucketId: bucketName}, nil
 }
 
 // DriverDeleteBucket is an idempotent method for deleting buckets
@@ -52,8 +73,11 @@ func (s *DriverServer) DriverCreateBucket(ctx context.Context,
 //	non-nil err -           Internal error                                [requeue'd with exponential backoff]
 func (s *DriverServer) DriverDeleteBucket(ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest) (*cosi.DriverDeleteBucketResponse, error) {
+	bucketId := req.GetBucketId()
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	s.client.DeleteBucket(bucketId)
+	klog.InfoS("Successfully deleted bucket", "name", bucketId)
+	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
 // DriverCreateBucketAccess is an idempotent method for creating bucket access
@@ -65,8 +89,25 @@ func (s *DriverServer) DriverDeleteBucket(ctx context.Context,
 //	non-nil err -           Internal error                                [requeue'd with exponential backoff]
 func (s *DriverServer) DriverGrantBucketAccess(ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest) (*cosi.DriverGrantBucketAccessResponse, error) {
+	name := req.GetName()
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	access, err := s.client.CreateBucketAccess(req.GetBucketId(), name)
+	if err != nil {
+		return nil, err
+	}
+
+	klog.InfoS("Successfully grant access", "name", access.Name, "accessKeyID", access.AccessKeyID)
+	return &cosi.DriverGrantBucketAccessResponse{
+		AccountId: access.Name,
+		Credentials: map[string]*cosi.CredentialDetails{
+			"s3": &cosi.CredentialDetails{
+				Secrets: map[string]string{
+					"accessKeyID":     access.AccessKeyID,
+					"accessSecretKey": access.AccessSecretKey,
+				},
+			},
+		},
+	}, nil
 }
 
 // DriverDeleteBucketAccess is an idempotent method for deleting bucket access
@@ -79,6 +120,10 @@ func (s *DriverServer) DriverGrantBucketAccess(ctx context.Context,
 //	non-nil err -           Internal error                                [requeue'd with exponential backoff]
 func (s *DriverServer) DriverRevokeBucketAccess(ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest) (*cosi.DriverRevokeBucketAccessResponse, error) {
+	bucketId := req.GetBucketId()
+	accountId := req.GetAccountId()
 
-	return nil, status.Error(codes.Unimplemented, "DriverCreateBucket: not implemented")
+	s.client.DeleteBucketAccess(bucketId, accountId)
+	klog.InfoS("Successfully revoke access", "bucketName", bucketId, "account", accountId)
+	return &cosi.DriverRevokeBucketAccessResponse{}, nil
 }
