@@ -15,6 +15,8 @@ package pkg
 
 import (
 	"context"
+
+	"sigs.k8s.io/cosi-driver-sample/pkg/s3"
 )
 
 func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *DriverServer, error) {
@@ -22,5 +24,6 @@ func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *Drive
 			provisioner: provisioner,
 		}, &DriverServer{
 			provisioner: provisioner,
+			client:      s3.NewClient(),
 		}, nil
 }
