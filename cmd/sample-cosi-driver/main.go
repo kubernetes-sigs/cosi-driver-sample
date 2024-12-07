@@ -1,4 +1,4 @@
-// Copyright 2021 The Kubernetes Authors.
+// Copyright 2021-2024 The Kubernetes Authors.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,31 +15,68 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"k8s.io/klog/v2"
+	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/provisioner"
+	"sigs.k8s.io/cosi-driver-sample/pkg/driver"
 )
 
-func main() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+type runOptions struct {
+	driverName   string
+	cosiEndpoint string
+	configPath   string
+}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		sig := <-sigs
-		klog.InfoS("Signal received", "type", sig)
-		cancel()
-
-		<-time.After(30 * time.Second)
-		os.Exit(1)
-	}()
-
-	if err := cmd.ExecuteContext(ctx); err != nil {
-		klog.ErrorS(err, "Exiting on error")
+func defaultEnv(key, defaultValue string) string {
+	val, found := os.LookupEnv(key)
+	if !found || val == "" {
+		return defaultValue
 	}
+
+	return val
+}
+
+func main() {
+	klog.InitFlags(nil)
+	flag.Parse()
+
+	opts := runOptions{
+		cosiEndpoint: defaultEnv("COSI_ENDPOINT", "unix:///var/lib/cosi/cosi.sock"),
+		driverName:   defaultEnv("X_COSI_DRIVER_NAME", "sample.objectstorage.k8s.io"),
+		configPath:   defaultEnv("X_COSI_CONFIG", "/etc/cosi/config.yaml"),
+	}
+
+	if err := run(context.Background(), opts); err != nil {
+		klog.ErrorS(err, "Exiting on error")
+		os.Exit(1)
+	}
+}
+
+func run(ctx context.Context, opts runOptions) error {
+	ctx, stop := signal.NotifyContext(ctx,
+		os.Interrupt,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+	)
+	defer stop()
+
+	identityServer, provisionerServer, err := driver.New(ctx, opts.driverName)
+	if err != nil {
+		return err
+	}
+
+	server, err := provisioner.NewDefaultCOSIProvisionerServer(
+		opts.cosiEndpoint,
+		identityServer,
+		provisionerServer,
+	)
+	if err != nil {
+		return err
+	}
+
+	return server.Run(ctx)
 }
