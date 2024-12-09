@@ -1,4 +1,4 @@
-// Copyright 2021 The Kubernetes Authors.
+// Copyright 2024 The Kubernetes Authors.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // You may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,19 +11,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package config
 
-import (
-	"context"
-
-	"sigs.k8s.io/cosi-driver-sample/pkg/s3"
-)
-
-func NewDriver(ctx context.Context, provisioner string) (*IdentityServer, *DriverServer, error) {
-	return &IdentityServer{
-			provisioner: provisioner,
-		}, &DriverServer{
-			provisioner: provisioner,
-			client:      s3.NewClient(),
-		}, nil
-}
+type Config struct{}

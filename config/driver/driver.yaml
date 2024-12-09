@@ -1,0 +1,74 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: driver
+  namespace: system
+  labels:
+    app.kubernetes.io/name: sample.objectstorage.k8s.io
+    app.kubernetes.io/instance: sample.objectstorage.k8s.io
+    app.kubernetes.io/part-of: cosi-driver-sample
+    app.kubernetes.io/component: cosi-driver
+    app.kubernetes.io/managed-by: kustomize
+spec:
+  replicas: 1
+  minReadySeconds: 30
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: cosi-driver-sample
+  template:
+    spec:
+      metadata:
+        app: cosi-driver-sample
+        app.kubernetes.io/name: sample.objectstorage.k8s.io
+        app.kubernetes.io/instance: sample.objectstorage.k8s.io
+        app.kubernetes.io/part-of: cosi-driver-sample
+        app.kubernetes.io/component: cosi-driver
+      serviceAccountName: driver
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+      containers:
+        - name: driver
+          securityContext:
+            readOnlyRootFilesystem: true
+          image: driver
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: cosi-socket-dir
+              mountPath: /var/lib/cosi
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64M
+            limits: {}
+        - name: objectstorage-provisioner-sidecar
+          image: sidecar
+          imagePullPolicy: IfNotPresent
+          args:
+            - "-v=4"
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: cosi-socket-dir
+              mountPath: /var/lib/cosi
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64M
+            limits: {}
+      volumes:
+        - name: cosi-socket-dir
+          emptyDir: {}
