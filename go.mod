@@ -1,6 +1,6 @@
 module sigs.k8s.io/cosi-driver-sample
 
-go 1.23.4
+go 1.22.9
 
 require (
 	github.com/minio/minio-go/v7 v7.0.82
@@ -14,7 +14,6 @@ require (
 
 // tools
 require (
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/golangci/golangci-lint v1.62.2
 	github.com/google/addlicense v1.1.1
 	golang.stackrox.io/kube-linter v0.7.1
@@ -96,8 +95,6 @@ require (
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
-	github.com/goccy/go-json v0.10.3 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.21.0 // indirect
@@ -156,19 +153,6 @@ require (
 	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.8 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/rogpeppe/go-internal v1.13.1 // indirect
-	github.com/rs/xid v1.6.0 // indirect
-	golang.org/x/crypto v0.29.0 // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	golang.org/x/text v0.20.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
 	github.com/kunwardeep/paralleltest v1.0.10 // indirect
 	github.com/kyoh86/exportloopref v0.1.11 // indirect
