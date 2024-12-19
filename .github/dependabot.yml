@@ -1,0 +1,43 @@
+version: 2
+updates:
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+      include: "scope"
+    labels:
+      - "area/dependency"
+      - "release-note-none"
+      - "ok-to-test"
+    groups:
+      k8s-dependencies:
+        patterns:
+          - "k8s.io/*"
+          - "sigs.k8s.io/*"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+      include: "scope"
+    labels:
+      - "area/dependency"
+      - "release-note-none"
+      - "ok-to-test"
+    open-pull-requests-limit: 10
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "fix"
+      include: "scope"
+    labels:
+      - "area/dependency"
+      - "release-note-none"
+      - "ok-to-test"
+    open-pull-requests-limit: 10

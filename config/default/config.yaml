@@ -1,0 +1,34 @@
+# Root configuration for customizing the behavior of the driver.
+# This includes the storage backend mode, overrides for specific configurations,
+# and errors to inject into driver calls.
+
+mode: "s3:fake"     # Mode of operation for the driver. Options:
+                    # - "azure:fake" : Fake Azure Blob storage mode.
+                    # - "s3:impl"    : Real Amazon S3 storage mode, requires.
+                    # - "s3:fake"    : Fake Amazon S3 storage mode.
+
+overrides:          # Overrides configuration for bucket and credentials.
+  bucketID: "my-bucket-id"  # ID of the bucket to use in driver operations.
+
+errors:             # Configuration for injecting errors into specific driver calls.
+  getInfo:          # Error for the GetInfo driver call.
+    message: "Unable to retrieve bucket info"  # Human-readable error message.
+    code: 3         # gRPC status code. Example: 3 (codes.InvalidArgument).
+                    # Complete list of status codes can be found here:
+                    # https://grpc.io/docs/guides/status-codes/
+
+  createBucket:     # Error for the CreateBucket driver call.
+    message: "Bucket creation failed due to insufficient permissions"
+    code: 7         # gRPC status code. Example: 7 (codes.PermissionDenied).
+
+  deleteBucket:     # Error for the DeleteBucket driver call.
+    message: "Bucket deletion not allowed"
+    code: 9         # gRPC status code. Example: 9 (codes.FailedPrecondition).
+
+  grantBucketAccess:  # Error for the GrantBucketAccess driver call.
+    message: "Access grant failed"
+    code: 13        # gRPC status code. Example: 13 (codes.Internal).
+
+  revokeBucketAccess: # Error for the RevokeBucketAccess driver call.
+    message: "Access revocation encountered an error"
+    code: 5         # gRPC status code. Example: 5 (codes.NotFound).
