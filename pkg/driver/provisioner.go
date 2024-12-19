@@ -1,6 +1,7 @@
 // Copyright 2021-2024 The Kubernetes Authors.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
-// You may not use this file except in compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -15,18 +16,23 @@ package driver
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
 	"k8s.io/klog/v2"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
-	"sigs.k8s.io/cosi-driver-sample/pkg/s3"
+	"sigs.k8s.io/cosi-driver-sample/pkg/clients"
+	"sigs.k8s.io/cosi-driver-sample/pkg/config"
 )
 
-// DriverServer implements the COSI driver server interface.
-type DriverServer struct {
-	provisioner string
-	client      *s3.FakeS3Client
+var ErrBucketNotFound = errors.New("bucket not found")
+
+// ProvisionerServer implements the COSI driver server interface.
+type ProvisionerServer struct {
+	Client clients.Client
+	Config config.Config
 }
 
 // DriverCreateBucket creates a bucket if it does not already exist.
@@ -37,29 +43,53 @@ type DriverServer struct {
 //   - nil: The bucket was successfully created or already exists with matching parameters.
 //   - codes.AlreadyExists: The bucket already exists but with different parameters.
 //   - error: Internal error requiring retries.
-func (s *DriverServer) DriverCreateBucket(
+func (s *ProvisionerServer) DriverCreateBucket(
 	ctx context.Context,
 	req *cosi.DriverCreateBucketRequest,
 ) (*cosi.DriverCreateBucketResponse, error) {
-	bucketName := req.GetName()
+	bucketName, overridden := s.getName(req)
 	parameters := req.GetParameters()
 
-	if s.client.BucketExists(bucketName) {
-		if s.client.IsBucketEqual(bucketName, parameters) {
-			klog.InfoS("Bucket already exists with matching parameters", "name", bucketName)
+	if err := s.Config.Errors.CreateBucket; err != nil {
+		klog.ErrorS(err, "Purposefully failing DriverCreateBucket call", "bucket", bucketName, "parameters", parameters)
+		return nil, status.Error(err.Code, err.Message)
+	}
+
+	exists, err := s.Client.BucketExists(ctx, bucketName)
+	if err != nil {
+		klog.ErrorS(err, "Failed to check bucket existence", "bucket", bucketName, "parameters", parameters)
+		return nil, status.Errorf(codes.Internal, "%s", err)
+	}
+	if exists {
+		if overridden {
+			klog.InfoS("Overridden bucket exists, skipping validation", "bucket", bucketName, "parameters", parameters)
 			return &cosi.DriverCreateBucketResponse{BucketId: bucketName}, nil
 		}
 
-		klog.InfoS("Bucket already exists with differing parameters", "name", bucketName)
-		return nil, status.Errorf(codes.AlreadyExists, "Bucket already exists: %s", bucketName)
+		equal, err := s.Client.IsBucketEqual(ctx, bucketName, parameters)
+		if err != nil {
+			klog.ErrorS(err, "Failed to compare bucket with expected parameters", "bucket", bucketName, "parameters", parameters)
+			return nil, status.Errorf(codes.Internal, "%s", err)
+		}
+		if equal {
+			klog.InfoS("Bucket already exists with matching parameters", "bucket", bucketName)
+			return &cosi.DriverCreateBucketResponse{BucketId: bucketName}, nil
+		}
+
+		klog.InfoS("Bucket already exists with differing parameters", "bucket", bucketName)
+		return nil, status.Errorf(codes.AlreadyExists, "bucket already exists: %s", bucketName)
 	}
 
-	if err := s.client.CreateBucket(bucketName, parameters); err != nil {
+	if err := s.Client.CreateBucket(ctx, bucketName, parameters); err != nil {
+		klog.ErrorS(err, "Failed to create bucket", "bucket", bucketName)
 		return nil, err
 	}
 
-	klog.InfoS("Bucket successfully created", "name", bucketName)
-	return &cosi.DriverCreateBucketResponse{BucketId: bucketName}, nil
+	klog.InfoS("Bucket successfully created", "bucket", bucketName)
+	return &cosi.DriverCreateBucketResponse{
+		BucketId:   bucketName,
+		BucketInfo: s.Client.ProtocolInfo(),
+	}, nil
 }
 
 // DriverDeleteBucket deletes a bucket if it exists. If the bucket does not exist, it returns success.
@@ -67,14 +97,23 @@ func (s *DriverServer) DriverCreateBucket(
 // Return values:
 //   - nil: The bucket was successfully deleted or does not exist.
 //   - error: Internal error requiring retries.
-func (s *DriverServer) DriverDeleteBucket(
+func (s *ProvisionerServer) DriverDeleteBucket(
 	ctx context.Context,
 	req *cosi.DriverDeleteBucketRequest,
 ) (*cosi.DriverDeleteBucketResponse, error) {
-	bucketId := req.GetBucketId()
+	bucketId := s.getBucketID(req)
 
-	s.client.DeleteBucket(bucketId)
-	klog.InfoS("Bucket successfully deleted", "name", bucketId)
+	if err := s.Config.Errors.DeleteBucket; err != nil {
+		klog.ErrorS(err, "Purposefully failing DriverDeleteBucket call", "bucket", bucketId)
+		return nil, status.Error(err.Code, err.Message)
+	}
+
+	if err := s.Client.DeleteBucket(ctx, bucketId); err != nil {
+		klog.ErrorS(err, "Failed to delete bucket", "bucket", bucketId)
+		return nil, status.Errorf(codes.Internal, "%s", err)
+	}
+
+	klog.InfoS("Bucket successfully deleted", "bucket", bucketId)
 	return &cosi.DriverDeleteBucketResponse{}, nil
 }
 
@@ -83,27 +122,41 @@ func (s *DriverServer) DriverDeleteBucket(
 // Return values:
 //   - nil: Access successfully granted.
 //   - error: Internal error requiring retries.
-func (s *DriverServer) DriverGrantBucketAccess(
+func (s *ProvisionerServer) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	name := req.GetName()
+	bucketId := s.getBucketID(req)
+	name, _ := s.getName(req)
 
-	access, err := s.client.CreateBucketAccess(req.GetBucketId(), name)
-	if err != nil {
-		return nil, err
+	if err := s.Config.Errors.GrantBucketAccess; err != nil {
+		klog.ErrorS(err, "Purposefully failing DriverGrantBucketAccess call", "bucket", bucketId, "account", name)
+		return nil, status.Error(err.Code, err.Message)
 	}
 
-	klog.InfoS("Bucket access successfully granted", "name", access.Name, "accessKeyID", access.AccessKeyID)
+	exists, err := s.Client.BucketExists(ctx, bucketId)
+	if err != nil {
+		klog.ErrorS(err, "Failed to check bucket existence", "bucket", bucketId, "account", name)
+		return nil, status.Errorf(codes.Internal, "%s", err)
+	}
+	if !exists {
+		klog.ErrorS(ErrBucketNotFound, "Cannot grant access to nonexistent bucket", "bucket", bucketId, "account", name)
+		return nil, status.Errorf(codes.NotFound, "%s", ErrBucketNotFound)
+	}
+
+	access, err := s.Client.CreateBucketAccess(ctx, bucketId, name)
+	if err != nil {
+		klog.ErrorS(err, "Failed to create bucket access", "bucket", bucketId, "account", name)
+		return nil, status.Errorf(codes.Internal, "%s", err)
+	}
+
+	klog.InfoS("Bucket access successfully granted", "name", access.Name())
 
 	return &cosi.DriverGrantBucketAccessResponse{
-		AccountId: access.Name,
+		AccountId: access.Name(),
 		Credentials: map[string]*cosi.CredentialDetails{
-			"s3": {
-				Secrets: map[string]string{
-					"accessKeyID":     access.AccessKeyID,
-					"accessSecretKey": access.AccessSecretKey,
-				},
+			access.Platform(): {
+				Secrets: access.Credentials(),
 			},
 		},
 	}, nil
@@ -115,15 +168,39 @@ func (s *DriverServer) DriverGrantBucketAccess(
 // Return values:
 //   - nil: Access successfully revoked or does not exist.
 //   - error: Internal error requiring retries.
-func (s *DriverServer) DriverRevokeBucketAccess(
+func (s *ProvisionerServer) DriverRevokeBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverRevokeBucketAccessRequest,
 ) (*cosi.DriverRevokeBucketAccessResponse, error) {
-	bucketId := req.GetBucketId()
+	bucketId := s.getBucketID(req)
 	accountId := req.GetAccountId()
 
-	s.client.DeleteBucketAccess(bucketId, accountId)
+	if err := s.Config.Errors.RevokeBucketAccess; err != nil {
+		klog.ErrorS(err, "Purposefully failing DriverRevokeBucketAccess call", "bucket", bucketId, "account", accountId)
+		return nil, status.Error(err.Code, err.Message)
+	}
 
-	klog.InfoS("Bucket access successfully revoked", "bucketName", bucketId, "account", accountId)
+	if err := s.Client.DeleteBucketAccess(ctx, bucketId, accountId); err != nil {
+		klog.ErrorS(err, "Failed to revoke bucket access", "bucket", bucketId, "account", accountId)
+		return nil, status.Errorf(codes.Internal, "%s", err)
+	}
+
+	klog.InfoS("Bucket access successfully revoked", "bucket", bucketId, "account", accountId)
 	return &cosi.DriverRevokeBucketAccessResponse{}, nil
+}
+
+func (s *ProvisionerServer) getName(req interface{ GetName() string }) (string, bool) {
+	if id := s.Config.Overrides.BucketID; id != "" {
+		return id, false
+	}
+
+	return req.GetName(), true
+}
+
+func (s *ProvisionerServer) getBucketID(req interface{ GetBucketId() string }) string {
+	if id := s.Config.Overrides.BucketID; id != "" {
+		return id
+	}
+
+	return req.GetBucketId()
 }

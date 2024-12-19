@@ -1,6 +1,7 @@
 // Copyright 2021-2024 The Kubernetes Authors.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
-// You may not use this file except in compliance with the License.
+// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -15,18 +16,20 @@ package driver
 
 import (
 	"context"
+	"errors"
 
-	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"k8s.io/klog/v2"
 
+	"k8s.io/klog/v2"
 	cosi "sigs.k8s.io/container-object-storage-interface-spec"
 )
 
+var ErrEmptyDriverName = errors.New("empty driver name")
+
 // IdentityServer implements the Identity service of the COSI driver.
 type IdentityServer struct {
-	provisioner string
+	Name string
 }
 
 // DriverGetInfo returns information about the driver.
@@ -34,12 +37,12 @@ func (id *IdentityServer) DriverGetInfo(
 	ctx context.Context,
 	req *cosi.DriverGetInfoRequest,
 ) (*cosi.DriverGetInfoResponse, error) {
-	if id.provisioner == "" {
-		klog.ErrorS(errors.New("provisioner name cannot be empty"), "Invalid argument")
-		return nil, status.Error(codes.Internal, "DriverName is empty")
+	if id.Name == "" {
+		klog.ErrorS(ErrEmptyDriverName, "Driver name cannot be empty")
+		return nil, status.Errorf(codes.Internal, "%s", ErrEmptyDriverName)
 	}
 
 	return &cosi.DriverGetInfoResponse{
-		Name: id.provisioner,
+		Name: id.Name,
 	}, nil
 }

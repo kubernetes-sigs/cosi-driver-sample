@@ -1,4 +1,4 @@
-// Copyright 2021-2024 The Kubernetes Authors.
+// Copyright 2023 The Kubernetes Authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,5 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package driver provides a sample implementation of the COSI driver interface.
-package driver
+//go:build never
+// +build never
+
+package hack
+
+import (
+	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/google/addlicense"
+	_ "golang.stackrox.io/kube-linter/cmd/kube-linter"
+	_ "sigs.k8s.io/kustomize/kustomize/v5"
+	_ "sigs.k8s.io/logtools/logcheck"
+)

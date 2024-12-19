@@ -5,6 +5,16 @@ namePrefix: cosi-sample-
 resources:
 - ../rbac
 - ../driver
+secretGenerator:
+- name: credentials
+  literals:
+    - S3_ENDPOINT=
+    - S3_REGION=
+    - S3_SSL=true
+    - S3_ADMIN_ACCESS_KEY_ID=
+    - S3_ADMIN_ACCESS_SECRET_KEY=
+    - S3_USER_ACCESS_KEY_ID=
+    - S3_USER_ACCESS_SECRET_KEY=
 configMapGenerator:
 - name: configuration
   files:

@@ -4,7 +4,7 @@ resources:
 - ./driver.yaml
 images:
 - name: driver
-  newName: ghcr.io/kubernetes-sigs/cosi-driver-sample
+  newName: gcr.io/k8s-staging-sig-storage/cosi-driver-sample
   newTag: main
 - name: sidecar
   newName: gcr.io/k8s-staging-sig-storage/objectstorage-sidecar/objectstorage-sidecar
