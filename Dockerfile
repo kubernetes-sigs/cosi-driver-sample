@@ -1,7 +1,7 @@
 #
 # BUILDER
 #
-FROM docker.io/library/golang:1.22.9 AS builder
+FROM docker.io/library/golang:1.23.4 AS builder
 
 WORKDIR /buildroot
 
