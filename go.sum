@@ -887,10 +887,8 @@ mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f h1:lMpcwN6GxNbWtbpI1+xzFLSW8
 mvdan.cc/unparam v0.0.0-20240528143540-8a5130ca722f/go.mod h1:RSLa7mKKCNeTTMHBw5Hsy2rfJmd6O2ivt9Dw9ZqCQpQ=
 oras.land/oras-go v1.2.5 h1:XpYuAwAb0DfQsunIyMfeET92emK8km3W4yEzZvUbsTo=
 oras.land/oras-go v1.2.5/go.mod h1:PuAwRShRZCsZb7g8Ar3jKKQR/2A/qN+pkYxIOd/FAoo=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0 h1:S5Qh/VAd745a2vMyZfK6qLiWJxvGpbUOddBtEVX1nU4=
-sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0/go.mod h1:JhfV605PePyAvL4F8wTjJ9ZiSAaGkrMmpn0liMPftJ4=
-sigs.k8s.io/container-object-storage-interface-spec v0.1.0 h1:WHeei3OywFyebPwBkVUuuV1SuGjG6Qm4BBmnfFTVa1Y=
-sigs.k8s.io/container-object-storage-interface-spec v0.1.0/go.mod h1:SzF/yVSh88TgYdBOAXqhT96XjU8pCQtoeQKxzIOOmWQ=
+sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250206225355-a70bf1119f7d h1:uWr18DLg9qB20jyC/Fr1ycyoGOqzH/e6qbtxLGlZraM=
+sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250206225355-a70bf1119f7d/go.mod h1:0H28Vt2NWaH4MPcD7gVn3cRwPoT8zGTN9wu0qj4mgYQ=
 sigs.k8s.io/controller-runtime v0.19.0 h1:nWVM7aq+Il2ABxwiCizrVDSlmDcshi9llbaFbC0ji/Q=
 sigs.k8s.io/controller-runtime v0.19.0/go.mod h1:iRmWllt8IlaLjvTTDLhRBXIEtkCK6hwVBJJsYS9Ajf4=
 sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd h1:EDPBXCAspyGV4jQlpZSudPeMmr1bNJefnuqLsRAsHZo=

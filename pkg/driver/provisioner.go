@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"k8s.io/klog/v2"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 	"sigs.k8s.io/cosi-driver-sample/pkg/clients"
 	"sigs.k8s.io/cosi-driver-sample/pkg/config"
 )
@@ -31,6 +31,7 @@ var ErrBucketNotFound = errors.New("bucket not found")
 
 // ProvisionerServer implements the COSI driver server interface.
 type ProvisionerServer struct {
+	cosi.ProvisionerServer
 	Client clients.Client
 	Config config.Config
 }

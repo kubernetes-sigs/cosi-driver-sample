@@ -16,22 +16,33 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
+	"time"
+
+	"google.golang.org/grpc"
 
 	"k8s.io/klog/v2"
-	"sigs.k8s.io/container-object-storage-interface-provisioner-sidecar/pkg/provisioner"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 	"sigs.k8s.io/cosi-driver-sample/pkg/clients"
 	"sigs.k8s.io/cosi-driver-sample/pkg/clients/fake"
 	"sigs.k8s.io/cosi-driver-sample/pkg/clients/s3"
 	"sigs.k8s.io/cosi-driver-sample/pkg/config"
 	"sigs.k8s.io/cosi-driver-sample/pkg/driver"
 	yaml "sigs.k8s.io/yaml/goyaml.v3"
+)
+
+const (
+	gracePeriod = 5 * time.Second
 )
 
 type runOptions struct {
@@ -136,14 +147,110 @@ func run(ctx context.Context, opts runOptions) error {
 		Config: cfg,
 	}
 
-	server, err := provisioner.NewDefaultCOSIProvisionerServer(
-		opts.cosiEndpoint,
-		identityServer,
-		provisionerServer,
-	)
+	// create the grpcServer
+	server, err := grpcServer(identityServer, provisionerServer)
 	if err != nil {
-		return err
+		return fmt.Errorf("gRPC server creation failed: %w", err)
 	}
 
-	return server.Run(ctx)
+	lis, cleanup, err := listener(ctx, opts.cosiEndpoint)
+	if err != nil {
+		return fmt.Errorf("failed to create listener for %s: %w", opts.cosiEndpoint, err)
+	}
+	defer cleanup()
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go shutdown(ctx, &wg, server)
+
+	if err = server.Serve(lis); err != nil {
+		return fmt.Errorf("gRPC server failed: %w", err)
+	}
+
+	wg.Wait()
+
+	return nil
+}
+
+func listener(
+	ctx context.Context,
+	cosiEndpoint string,
+) (net.Listener, func(), error) {
+	endpointURL, err := url.Parse(cosiEndpoint)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to parse COSI endpoint: %w", err)
+	}
+
+	listenConfig := net.ListenConfig{}
+
+	if endpointURL.Scheme == "unix" {
+		// best effort call to remove the socket if it exists, fixes issue with restarted pod that did not exit gracefully
+		_ = os.Remove(endpointURL.Path)
+	}
+
+	listener, err := listenConfig.Listen(ctx, endpointURL.Scheme, endpointURL.Path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to create listener: %w", err)
+	}
+
+	cleanup := func() {
+		if endpointURL.Scheme == "unix" {
+			if err := os.Remove(endpointURL.Path); err != nil {
+				klog.ErrorS(err, "Failed to remove old socket")
+			}
+		}
+	}
+
+	return listener, cleanup, nil
+}
+
+func grpcServer(
+	identity cosi.IdentityServer,
+	provisioner cosi.ProvisionerServer,
+) (*grpc.Server, error) {
+	server := grpc.NewServer()
+
+	if identity == nil || provisioner == nil {
+		return nil, errors.New("provisioner and identity servers cannot be nil")
+	}
+
+	cosi.RegisterIdentityServer(server, identity)
+	cosi.RegisterProvisionerServer(server, provisioner)
+
+	return server, nil
+}
+
+// shutdown handles shutdown with grace period consideration.
+func shutdown(ctx context.Context,
+	wg *sync.WaitGroup,
+	g *grpc.Server,
+) {
+	<-ctx.Done()
+	defer wg.Done()
+	defer klog.Info("Stopped")
+
+	klog.Info("Shutting down")
+
+	dctx, stop := context.WithTimeout(context.Background(), gracePeriod)
+	defer stop()
+
+	c := make(chan struct{})
+
+	if g != nil {
+		go func() {
+			g.GracefulStop()
+			c <- struct{}{}
+		}()
+
+		for {
+			select {
+			case <-dctx.Done():
+				klog.Info("Forcing shutdown")
+				g.Stop()
+				return
+			case <-c:
+				return
+			}
+		}
+	}
 }
