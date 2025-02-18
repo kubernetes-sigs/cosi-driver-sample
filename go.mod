@@ -7,8 +7,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.69.4
 	k8s.io/klog/v2 v2.130.1
-	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
-	sigs.k8s.io/container-object-storage-interface-spec v0.1.0
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20250206225355-a70bf1119f7d
 	sigs.k8s.io/yaml v1.4.0
 )
 
