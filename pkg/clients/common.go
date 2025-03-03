@@ -17,7 +17,7 @@ package clients
 import (
 	"context"
 
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
 type User interface {

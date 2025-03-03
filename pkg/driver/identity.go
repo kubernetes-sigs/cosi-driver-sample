@@ -22,13 +22,14 @@ import (
 	"google.golang.org/grpc/status"
 
 	"k8s.io/klog/v2"
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 )
 
 var ErrEmptyDriverName = errors.New("empty driver name")
 
 // IdentityServer implements the Identity service of the COSI driver.
 type IdentityServer struct {
+	cosi.IdentityServer
 	Name string
 }
 

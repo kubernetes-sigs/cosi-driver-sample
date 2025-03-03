@@ -20,7 +20,7 @@ import (
 	"maps"
 	"math/rand"
 
-	cosi "sigs.k8s.io/container-object-storage-interface-spec"
+	cosi "sigs.k8s.io/container-object-storage-interface/proto"
 	"sigs.k8s.io/cosi-driver-sample/pkg/clients"
 )
 
