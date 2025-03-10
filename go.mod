@@ -6,7 +6,7 @@ toolchain go1.23.6
 require (
 	github.com/minio/minio-go/v7 v7.0.88
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 	k8s.io/klog/v2 v2.130.1
 	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
 	sigs.k8s.io/container-object-storage-interface-spec v0.1.0
