@@ -1,7 +1,6 @@
 module sigs.k8s.io/cosi-driver-sample
 
-go 1.22.9
-toolchain go1.23.6
+go 1.24.1
 
 require (
 	github.com/minio/minio-go/v7 v7.0.88
