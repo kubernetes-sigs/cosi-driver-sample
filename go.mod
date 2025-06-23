@@ -3,7 +3,7 @@ module sigs.k8s.io/cosi-driver-sample
 go 1.24.1
 
 require (
-	github.com/minio/minio-go/v7 v7.0.93
+	github.com/minio/minio-go/v7 v7.0.94
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.72.0
 	k8s.io/klog/v2 v2.130.1
