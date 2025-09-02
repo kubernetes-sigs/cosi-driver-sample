@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/minio/minio-go/v7 v7.0.95
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.72.0
 	k8s.io/klog/v2 v2.130.1
 	sigs.k8s.io/container-object-storage-interface-provisioner-sidecar v0.1.0
