@@ -18,7 +18,7 @@ require (
 	github.com/google/addlicense v1.2.0
 	golang.stackrox.io/kube-linter v0.7.6
 	sigs.k8s.io/kustomize/kustomize/v5 v5.8.0
-	sigs.k8s.io/logtools v0.9.0
+	sigs.k8s.io/logtools v0.10.0
 )
 
 require (
