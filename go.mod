@@ -6,7 +6,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.97
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.75.1
-	k8s.io/klog/v2 v2.130.1
+	k8s.io/klog/v2 v2.140.0
 	sigs.k8s.io/container-object-storage-interface/client v0.2.2
 	sigs.k8s.io/container-object-storage-interface/proto v0.2.2
 	sigs.k8s.io/yaml v1.6.0
