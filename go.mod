@@ -3,11 +3,11 @@ module sigs.k8s.io/cosi-driver-sample
 go 1.26.0
 
 require (
-	github.com/aws/aws-sdk-go-v2 v1.41.3
+	github.com/aws/aws-sdk-go-v2 v1.41.11
 	github.com/aws/aws-sdk-go-v2/config v1.32.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.11
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.4
-	github.com/aws/smithy-go v1.24.2
+	github.com/aws/smithy-go v1.27.0
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.79.1
 	k8s.io/api v0.35.2
