@@ -14,7 +14,7 @@ REPO="gcr.io/k8s-staging-sig-storage"
 SAMPLE_DRIVER_IMAGE="${REPO}/cosi-driver-sample"
 
 # args to 'make build'
-export DOCKER="/buildx-entrypoint" # available in gcr.io/k8s-testimages/gcb-docker-gcloud image
+export DOCKER="/buildx-entrypoint" # available in gcr.io/k8s-staging-test-infra/gcb-docker-gcloud image
 export BUILD_ARGS="--push"
 export PLATFORM
 export SAMPLE_DRIVER_TAG="${SAMPLE_DRIVER_IMAGE}:${GIT_TAG}"
