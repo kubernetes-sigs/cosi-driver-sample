@@ -15,7 +15,7 @@ require (
 	k8s.io/client-go v0.35.2
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20261119183834-92895c83eaec
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20261123225424-baf1cb4a8b15
 )
 
 require (
