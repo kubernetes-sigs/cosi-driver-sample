@@ -60,6 +60,8 @@ func (tc provisionerServerTestBase) buildServer() ProvisionerServer {
 // ---------------------------------------------------------------------------
 
 func TestProvisionerServer_GenerateBucketId(t *testing.T) {
+	const suggestedName = "obj-bucket-cru1a2b3c"
+
 	for _, tc := range []struct {
 		name             string
 		request          *cosi.DriverGenerateBucketIdRequest
@@ -67,14 +69,13 @@ func TestProvisionerServer_GenerateBucketId(t *testing.T) {
 	}{
 		{
 			name:    "returns the suggested name unchanged",
-			request: &cosi.DriverGenerateBucketIdRequest{Name: "obj-bucket-cru1a2b3c"},
+			request: &cosi.DriverGenerateBucketIdRequest{Name: suggestedName},
 			expectedResponse: &cosi.DriverGenerateBucketIdResponse{
-				BucketId: "obj-bucket-cru1a2b3c",
+				BucketId: suggestedName,
 			},
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			// A nil DynamicClient panics if the call reaches the backend.
 			srv := ProvisionerServer{}
 
 			actual, err := srv.DriverGenerateBucketId(t.Context(), tc.request)
