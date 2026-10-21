@@ -13,11 +13,8 @@ substitutions:
   # COSI substitutions:
   _PLATFORMS: linux/amd64,linux/arm64 # add more platforms here if desired
 steps:
-  # TODO: currently gcr.io/k8s-testimages/gcb-docker-gcloud has not moved to Artifact Registry
-  # gcr.io will be shut down 18 Mar 2025, and we need replacement before then. Latest info below:
-  # https://github.com/kubernetes/test-infra/blob/master/images/gcb-docker-gcloud/cloudbuild.yaml
   - id: do-multi-arch-build-all-images
-    name: gcr.io/k8s-testimages/gcb-docker-gcloud:v20240718-5ef92b5c36
+    name: gcr.io/k8s-staging-test-infra/gcb-docker-gcloud@sha256:ff388e0dc16351e96f8464e2e185b74a7578a5ccb7a112cf3393468e59e6e2d2 # v20260205-38cfa9523f
     args:
       - hack/cloudbuild.sh
     env:
