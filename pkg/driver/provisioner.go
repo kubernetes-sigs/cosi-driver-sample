@@ -100,7 +100,7 @@ func (s *ProvisionerServer) DriverCreateBucket(
 
 	klog.InfoS("Bucket successfully created", "bucket", bucketName)
 	return &cosi.DriverCreateBucketResponse{
-		Protocols: &cosi.ObjectProtocolAndBucketInfo{
+		BucketInfo: &cosi.BucketInfo{
 			S3: &cosi.S3BucketInfo{
 				BucketId: bucketName,
 				Endpoint: bucketInfo.Endpoint,
@@ -274,13 +274,13 @@ func (s *ProvisionerServer) DriverRevokeBucketAccess(
 
 func rewriteBuckets(
 	in []s3.BucketInfo,
-) []*cosi.DriverGrantBucketAccessResponse_BucketInfo {
-	buckets := make([]*cosi.DriverGrantBucketAccessResponse_BucketInfo, 0, len(in))
+) []*cosi.DriverGrantBucketAccessResponse_AccessGrantedBucket {
+	buckets := make([]*cosi.DriverGrantBucketAccessResponse_AccessGrantedBucket, 0, len(in))
 
 	for _, bucket := range in {
-		buckets = append(buckets, &cosi.DriverGrantBucketAccessResponse_BucketInfo{
+		buckets = append(buckets, &cosi.DriverGrantBucketAccessResponse_AccessGrantedBucket{
 			BucketId: bucket.BucketName,
-			BucketInfo: &cosi.ObjectProtocolAndBucketInfo{
+			BucketInfo: &cosi.BucketInfo{
 				S3: &cosi.S3BucketInfo{
 					BucketId: bucket.BucketName,
 					Endpoint: bucket.Endpoint,
