@@ -15,7 +15,7 @@ require (
 	k8s.io/client-go v0.35.2
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
-	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20260924183817-7b121df3e445
+	sigs.k8s.io/container-object-storage-interface/proto v0.0.0-20261119183834-92895c83eaec
 )
 
 require (
@@ -70,5 +70,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-replace sigs.k8s.io/container-object-storage-interface/proto => github.com/rajaneeshgit/container-object-storage-interface/proto v0.0.0-20261118163405-8b27b48fac16
