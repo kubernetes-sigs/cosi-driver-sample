@@ -179,7 +179,7 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 				Protocols: []*cosi.ObjectProtocol{{Type: cosi.ObjectProtocol_S3}},
 			},
 			expectedResponse: &cosi.DriverCreateBucketResponse{
-				Protocols: &cosi.ObjectProtocolAndBucketInfo{
+				BucketInfo: &cosi.BucketInfo{
 					S3: &cosi.S3BucketInfo{
 						BucketId: "existing-bucket",
 						Endpoint: "http://s3.example.com",
@@ -202,7 +202,7 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 				Protocols: []*cosi.ObjectProtocol{{Type: cosi.ObjectProtocol_S3}},
 			},
 			expectedResponse: &cosi.DriverCreateBucketResponse{
-				Protocols: &cosi.ObjectProtocolAndBucketInfo{
+				BucketInfo: &cosi.BucketInfo{
 					S3: &cosi.S3BucketInfo{
 						BucketId: "new-bucket",
 					},
@@ -259,11 +259,11 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 			if tc.expectedResponse != nil {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				require.NotNil(t, actual.Protocols)
-				require.NotNil(t, actual.Protocols.S3)
-				assert.Equal(t, tc.expectedResponse.Protocols.S3.BucketId, actual.Protocols.S3.BucketId)
-				assert.Equal(t, tc.expectedResponse.Protocols.S3.Endpoint, actual.Protocols.S3.Endpoint)
-				assert.Equal(t, tc.expectedResponse.Protocols.S3.Region, actual.Protocols.S3.Region)
+				require.NotNil(t, actual.BucketInfo)
+				require.NotNil(t, actual.BucketInfo.S3)
+				assert.Equal(t, tc.expectedResponse.BucketInfo.S3.BucketId, actual.BucketInfo.S3.BucketId)
+				assert.Equal(t, tc.expectedResponse.BucketInfo.S3.Endpoint, actual.BucketInfo.S3.Endpoint)
+				assert.Equal(t, tc.expectedResponse.BucketInfo.S3.Region, actual.BucketInfo.S3.Region)
 
 				if tc.checkStub != nil {
 					stub, ok := tc.dynamicClient.(*stubs3.StubClient)
@@ -387,7 +387,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -402,7 +402,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_SERVICE_ACCOUNT,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -419,7 +419,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -435,7 +435,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -456,7 +456,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -476,7 +476,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "missing-bucket"},
 				},
 			},
@@ -498,7 +498,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -519,7 +519,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -544,7 +544,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
 				},
 			},
@@ -576,7 +576,7 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
-				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessedBucket{
+				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "bucket-a"},
 					{BucketId: "bucket-b"},
 				},
