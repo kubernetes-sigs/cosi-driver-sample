@@ -102,9 +102,9 @@ func (s *ProvisionerServer) DriverCreateBucket(
 	return &cosi.DriverCreateBucketResponse{
 		Protocols: &cosi.ObjectProtocolAndBucketInfo{
 			S3: &cosi.S3BucketInfo{
-				BucketId: bucketName,
-				Endpoint: bucketInfo.Endpoint,
-				Region:   bucketInfo.Region,
+				BucketName: bucketName,
+				Endpoint:   bucketInfo.Endpoint,
+				Region:     bucketInfo.Region,
 				AddressingStyle: &cosi.S3AddressingStyle{
 					Style: cosi.S3AddressingStyle_PATH,
 				},
@@ -282,9 +282,9 @@ func rewriteBuckets(
 			BucketId: bucket.BucketName,
 			BucketInfo: &cosi.ObjectProtocolAndBucketInfo{
 				S3: &cosi.S3BucketInfo{
-					BucketId: bucket.BucketName,
-					Endpoint: bucket.Endpoint,
-					Region:   bucket.Region,
+					BucketName: bucket.BucketName,
+					Endpoint:   bucket.Endpoint,
+					Region:     bucket.Region,
 					AddressingStyle: &cosi.S3AddressingStyle{
 						Style: cosi.S3AddressingStyle_PATH,
 					},

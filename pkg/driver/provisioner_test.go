@@ -181,9 +181,9 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 			expectedResponse: &cosi.DriverCreateBucketResponse{
 				Protocols: &cosi.ObjectProtocolAndBucketInfo{
 					S3: &cosi.S3BucketInfo{
-						BucketId: "existing-bucket",
-						Endpoint: "http://s3.example.com",
-						Region:   "us-east-1",
+						BucketName: "existing-bucket",
+						Endpoint:   "http://s3.example.com",
+						Region:     "us-east-1",
 					},
 				},
 			},
@@ -204,7 +204,7 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 			expectedResponse: &cosi.DriverCreateBucketResponse{
 				Protocols: &cosi.ObjectProtocolAndBucketInfo{
 					S3: &cosi.S3BucketInfo{
-						BucketId: "new-bucket",
+						BucketName: "new-bucket",
 					},
 				},
 			},
@@ -261,7 +261,7 @@ func TestProvisionerServer_CreateBucket(t *testing.T) {
 				require.NotNil(t, actual)
 				require.NotNil(t, actual.Protocols)
 				require.NotNil(t, actual.Protocols.S3)
-				assert.Equal(t, tc.expectedResponse.Protocols.S3.BucketId, actual.Protocols.S3.BucketId)
+				assert.Equal(t, tc.expectedResponse.Protocols.S3.BucketName, actual.Protocols.S3.BucketName)
 				assert.Equal(t, tc.expectedResponse.Protocols.S3.Endpoint, actual.Protocols.S3.Endpoint)
 				assert.Equal(t, tc.expectedResponse.Protocols.S3.Region, actual.Protocols.S3.Region)
 
