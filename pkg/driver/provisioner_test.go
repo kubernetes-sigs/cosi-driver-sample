@@ -90,6 +90,51 @@ func TestProvisionerServer_GenerateBucketId(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
+// DriverGenerateBucketAccessId
+// ---------------------------------------------------------------------------
+
+func TestProvisionerServer_GenerateBucketAccessId(t *testing.T) {
+	for _, tc := range []struct {
+		name             string
+		request          *cosi.DriverGenerateBucketAccessIdRequest
+		expectedResponse *cosi.DriverGenerateBucketAccessIdResponse
+	}{
+		{
+			name:    "returns the suggested name unchanged",
+			request: &cosi.DriverGenerateBucketAccessIdRequest{AccountName: "ba-1a2b3c"},
+			expectedResponse: &cosi.DriverGenerateBucketAccessIdResponse{
+				AccountId: "ba-1a2b3c",
+			},
+		},
+		{
+			name:    "empty account_name returns InvalidArgument",
+			request: &cosi.DriverGenerateBucketAccessIdRequest{AccountName: ""},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			// A nil DynamicClient panics if the call reaches the backend.
+			srv := ProvisionerServer{}
+
+			actual, err := srv.DriverGenerateBucketAccessId(t.Context(), tc.request)
+			if tc.expectedResponse == nil {
+				require.Error(t, err)
+				assert.Equal(t, codes.InvalidArgument, status.Code(err))
+				assert.Nil(t, actual)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedResponse, actual)
+
+			again, err := srv.DriverGenerateBucketAccessId(t.Context(), tc.request)
+			require.NoError(t, err)
+			assert.Equal(t, actual, again)
+		})
+	}
+}
+
+// ---------------------------------------------------------------------------
 // DriverCreateBucket
 // ---------------------------------------------------------------------------
 
@@ -382,8 +427,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				name: "non-S3 protocol returns InvalidArgument",
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_AZURE},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_AZURE},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -397,13 +442,26 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				name: "non-KEY auth type returns InvalidArgument",
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_SERVICE_ACCOUNT,
 				},
 				Buckets: []*cosi.DriverGrantBucketAccessRequest_AccessRequestedBucket{
 					{BucketId: "test-bucket"},
+				},
+			},
+		},
+		{
+			provisionerServerTestBase: provisionerServerTestBase{
+				name:          "empty account_id returns InvalidArgument",
+				dynamicClient: &stubs3.StubClient{},
+			},
+			request: &cosi.DriverGrantBucketAccessRequest{
+				AccountId: "",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AuthenticationType: &cosi.AuthenticationType{
+					Type: cosi.AuthenticationType_KEY,
 				},
 			},
 		},
@@ -414,8 +472,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				dynamicClientErr: s3.MissingParameterError{Parameter: "adminSecretName"},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -430,8 +488,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				dynamicClientErr: errGeneric,
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -451,8 +509,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -471,8 +529,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -493,8 +551,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -514,8 +572,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -539,8 +597,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user1",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user1",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -549,7 +607,6 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			expectedResponse: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: "user1",
 				Credentials: &cosi.CredentialInfo{
 					S3: &cosi.S3CredentialInfo{
 						// StubClient does not populate AccessKeyID / SecretKey
@@ -571,8 +628,8 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			request: &cosi.DriverGrantBucketAccessRequest{
-				AccountName: "user2",
-				Protocol:    &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
+				AccountId: "user2",
+				Protocol:  &cosi.ObjectProtocol{Type: cosi.ObjectProtocol_S3},
 				AuthenticationType: &cosi.AuthenticationType{
 					Type: cosi.AuthenticationType_KEY,
 				},
@@ -582,7 +639,6 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 				},
 			},
 			expectedResponse: &cosi.DriverGrantBucketAccessResponse{
-				AccountId: "user2",
 				Credentials: &cosi.CredentialInfo{
 					S3: &cosi.S3CredentialInfo{},
 				},
@@ -596,7 +652,9 @@ func TestProvisionerServer_GrantBucketAccess(t *testing.T) {
 			if tc.expectedResponse != nil {
 				require.NoError(t, err)
 				require.NotNil(t, actual)
-				assert.Equal(t, tc.expectedResponse.AccountId, actual.AccountId)
+				stub, ok := tc.dynamicClient.(*stubs3.StubClient)
+				require.True(t, ok)
+				assert.Contains(t, stub.Accesses, tc.request.AccountId, "backend account must be named by account_id")
 				require.NotNil(t, actual.Credentials)
 				require.NotNil(t, actual.Credentials.S3)
 				assert.Equal(t, tc.expectedResponse.Credentials.S3.AccessKeyId, actual.Credentials.S3.AccessKeyId)

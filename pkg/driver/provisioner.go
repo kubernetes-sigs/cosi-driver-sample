@@ -46,6 +46,20 @@ func (s *ProvisionerServer) DriverGenerateBucketId(
 	}, nil
 }
 
+// DriverGenerateBucketAccessId uses the account name as the account ID. Changing this orphans existing accounts.
+func (s *ProvisionerServer) DriverGenerateBucketAccessId(
+	_ context.Context,
+	req *cosi.DriverGenerateBucketAccessIdRequest,
+) (*cosi.DriverGenerateBucketAccessIdResponse, error) {
+	if req.GetAccountName() == "" {
+		return nil, status.Error(codes.InvalidArgument, "Missing required account_name in request")
+	}
+
+	return &cosi.DriverGenerateBucketAccessIdResponse{
+		AccountId: req.GetAccountName(),
+	}, nil
+}
+
 // DriverCreateBucket creates a bucket if it does not already exist.
 // If the bucket exists and the parameters match, it returns success without error.
 // If the bucket exists but the parameters differ, it returns a conflict error.
@@ -155,7 +169,10 @@ func (s *ProvisionerServer) DriverGrantBucketAccess(
 	ctx context.Context,
 	req *cosi.DriverGrantBucketAccessRequest,
 ) (*cosi.DriverGrantBucketAccessResponse, error) {
-	name := req.GetAccountName()
+	name := req.GetAccountId()
+	if name == "" {
+		return nil, status.Error(codes.InvalidArgument, "Missing required account_id in request")
+	}
 	parameters := req.GetParameters()
 
 	if req.GetProtocol().GetType() != cosi.ObjectProtocol_S3 {
@@ -217,8 +234,7 @@ func (s *ProvisionerServer) DriverGrantBucketAccess(
 	klog.InfoS("Bucket access successfully granted", "name", "")
 
 	return &cosi.DriverGrantBucketAccessResponse{
-		AccountId: accessInfo.AccountID,
-		Buckets:   rewriteBuckets(accessInfo.Buckets),
+		Buckets: rewriteBuckets(accessInfo.Buckets),
 		Credentials: &cosi.CredentialInfo{
 			S3: &cosi.S3CredentialInfo{
 				AccessKeyId:     accessInfo.AccessKeyID,
